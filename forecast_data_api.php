@@ -1,5 +1,5 @@
 <?php
-$filename = 'prediction_8h.txt';
+$filename = 'http://localhost/thesiss/air_quality_ml/prediction_8h.txt';
 
 if (file_exists($filename)) {
     $json = file_get_contents($filename);
