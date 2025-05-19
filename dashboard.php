@@ -876,7 +876,6 @@ footer {
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const ctx = document.getElementById("pollutantTrendChart").getContext("2d");
-    const selectEl = document.getElementById("pollutantSelect");
 
     const aqiLevels = [
         { level: "Good", max: 50, color: "#388e3c" },
@@ -887,47 +886,98 @@ document.addEventListener("DOMContentLoaded", function () {
         { level: "Severe", max: 500, color: "#9e1e32" }
     ];
 
-    const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "hum"];
-    const labels = {
-        pm25: "PM2.5 (µg/m³)",
-        pm10: "PM10 (µg/m³)",
-        co:   "CO (ppm)",
-        o3:   "O₃ (ppb)",
-        so2:  "SO₂ (ppb)",
-        ch4:  "CH₄ (ppm)",
-        temp: "Temperature (°C)",
-        hum:  "Humidity (%)"
-    };
-    const maxValues = {
-        pm25: 301,
-        pm10: 301,
-        co: 50,
-        o3: 5,
-        so2: 10,
-        ch4: 5,
-        temp: 40,
-        hum: 100
-    };
-
-    const aqiKeysMap = {
-        AQI_PM25: "pm25",
-        AQI_PM10: "pm10",
-        AQI_CO: "co",
-        AQI_O3: "o3",
-        AQI_SO2: "so2"
-        // Exclude CH4, TEMP, HUM
-    };
-
-    let currentPollutant = "pm25";
-    let chart;
-
     const pollutantData = {};
-    pollutants.forEach(p => pollutantData[p] = { label: labels[p], data: [], max: maxValues[p] });
     const timeLabels = [];
+
+    // Fetch sensor trend data
+    fetch('fetch_sensor_data.php')
+        .then(response => response.json())
+        .then(data => {
+            const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "hum"];
+            const labels = {
+                pm25: "PM2.5 (µg/m³)",
+                pm10: "PM10 (µg/m³)",
+                co:   "CO (ppm)",
+                o3:   "O₃ (ppb)",
+                so2:  "SO₂ (ppb)",
+                ch4:  "CH₄ (ppm)",
+                temp: "Temperature (°C)",
+                hum:  "Humidity (%)"
+            };
+            const maxValues = {
+                pm25: 301,
+                pm10: 301,
+                co: 50,
+                o3: 5,
+                so2: 10,
+                ch4: 5,
+                temp: 40,
+                hum: 100
+            };
+
+            pollutants.forEach(p => pollutantData[p] = { label: labels[p], data: [], max: maxValues[p] });
+
+            data.forEach(entry => {
+                const hour = new Date(entry.hour);
+                const label = hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                timeLabels.push(label);
+
+                pollutantData.pm25.data.push(parseFloat(entry.avg_pm25));
+                pollutantData.pm10.data.push(parseFloat(entry.avg_pm10));
+                pollutantData.co.data.push(parseFloat(entry.avg_co));
+                pollutantData.o3.data.push(parseFloat(entry.avg_o3));
+                pollutantData.so2.data.push(parseFloat(entry.avg_so2));
+                pollutantData.ch4.data.push(parseFloat(entry.avg_ch4));
+                pollutantData.temp.data.push(parseFloat(entry.avg_temp));
+                pollutantData.hum.data.push(parseFloat(entry.avg_hum));
+            });
+
+            // Fetch latest AQI data to determine initial pollutant
+            fetch('latest_data_api.php')
+                .then(response => response.json())
+                .then(latest => {
+                    const aqiKeys = {
+                        AQI_PM25: "pm25",
+                        AQI_PM10: "pm10",
+                        AQI_CO: "co",
+                        AQI_O3: "o3",
+                        AQI_SO2: "so2"
+                    };
+
+                    let maxAQI = -1;
+                    let defaultPollutant = "pm25"; // fallback
+
+                    for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
+                        const value = parseFloat(latest[aqiKey]);
+                        if (!isNaN(value) && value > maxAQI) {
+                            maxAQI = value;
+                            defaultPollutant = pollutantKey;
+                        }
+                    }
+
+                    // Set default select option
+                    document.getElementById("pollutantSelect").value = defaultPollutant;
+
+                    // Draw chart
+                    let chart = createChart(defaultPollutant);
+
+                    // Update on selection change
+                    document.getElementById("pollutantSelect").addEventListener("change", function () {
+                        const selected = this.value;
+                        chart.destroy();
+                        chart = createChart(selected);
+                    });
+                });
+        })
+        .catch(error => {
+            console.error("Error loading sensor data:", error);
+        });
 
     function getAQIColor(avgValue) {
         for (const level of aqiLevels) {
-            if (avgValue <= level.max) return level.color;
+            if (avgValue <= level.max) {
+                return level.color;
+            }
         }
         return "#9e1e32";
     }
@@ -1007,69 +1057,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
-
-    function fetchTrendDataAndInitialize() {
-        fetch('fetch_sensor_data.php')
-            .then(response => response.json())
-            .then(data => {
-                timeLabels.length = 0;
-                pollutants.forEach(p => pollutantData[p].data = []);
-                data.forEach(entry => {
-                    const hour = new Date(entry.hour);
-                    const label = hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    timeLabels.push(label);
-                    pollutantData.pm25.data.push(parseFloat(entry.avg_pm25));
-                    pollutantData.pm10.data.push(parseFloat(entry.avg_pm10));
-                    pollutantData.co.data.push(parseFloat(entry.avg_co));
-                    pollutantData.o3.data.push(parseFloat(entry.avg_o3));
-                    pollutantData.so2.data.push(parseFloat(entry.avg_so2));
-                    pollutantData.ch4.data.push(parseFloat(entry.avg_ch4));
-                    pollutantData.temp.data.push(parseFloat(entry.avg_temp));
-                    pollutantData.hum.data.push(parseFloat(entry.avg_hum));
-                });
-
-                fetchLatestAQIData(); // trigger chart creation
-            });
-    }
-
-    function fetchLatestAQIData() {
-        fetch('latest_data_api.php')
-            .then(res => res.json())
-            .then(latest => {
-                let maxAQI = -1;
-                let dominantPollutant = currentPollutant;
-
-                Object.entries(aqiKeysMap).forEach(([aqiKey, pollutantKey]) => {
-                    const aqiVal = parseFloat(latest[aqiKey]);
-                    if (aqiVal > maxAQI) {
-                        maxAQI = aqiVal;
-                        dominantPollutant = pollutantKey;
-                    }
-                });
-
-                if (dominantPollutant !== currentPollutant) {
-                    currentPollutant = dominantPollutant;
-                    selectEl.value = currentPollutant;
-                    if (chart) chart.destroy();
-                    chart = createChart(currentPollutant);
-                }
-            });
-    }
-
-    selectEl.addEventListener("change", function () {
-        currentPollutant = this.value;
-        if (chart) chart.destroy();
-        chart = createChart(currentPollutant);
-    });
-
-    fetchTrendDataAndInitialize();
-
-    // Refresh chart selection every 5 seconds
-    setInterval(() => {
-        fetchLatestAQIData();
-    }, 5000);
 });
-
 </script>
 
 
