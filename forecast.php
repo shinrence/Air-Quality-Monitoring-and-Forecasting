@@ -199,6 +199,23 @@ footer {
     background: rgba(0, 0, 0, 0.6);
 }
 
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  text-align: center;
+}
+
+@media screen and (max-width: 600px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
 
     </style>
 </head>
@@ -220,162 +237,155 @@ footer {
     </div>
 </div>
 
-<div style="display: flex; justify-content: center; width: 100%;">
-    <div class="aqi-prediction-container" style="
-        width: 100%;
-        max-width: 1186px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0px;
-        padding: 10px 20px;
-        margin-top: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 10px;
-        box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    ">
-        <h2 id="aqi_title" style="margin: 0;">Air Quality Prediction for --</h2>
-        <div style="display: flex; align-items: center;">
-            <div id="aqi_display" style="font-size: 1.6rem; font-weight: bold; margin-right: 10px;">AQI: --</div>
-            <div id="aqi_level" class="level-card" style="padding: 5px 12px; border-radius: 6px;">--</div>
-        </div>
-    </div>
+<!-- Prediction Header -->
+<!-- AQI Prediction Container -->
+<div class="aqi-prediction-container" style="margin-top: 0px; padding: 10px; border-radius: 12px;">
+  <h2 id="timestamp" style="text-align: center; color: white; margin-bottom: 10px;">Date: --</h2>
+
+  <!-- Scrollable wrapper -->
+  <div style="overflow-x: auto;">
+
+    <table style="min-width: 800px; width: 100%; border-collapse: collapse; table-layout: fixed; color: white; text-align: center;">
+      <thead>
+        <tr style="background-color: #2a2a2a;">
+          <th rowspan="2" style="border: 1px solid #444; padding: 10px;">Hour</th>
+          <th style="border: 1px solid #444; padding: 10px;">PM2.5</th>
+          <th style="border: 1px solid #444; padding: 10px;">PM10</th>
+          <th style="border: 1px solid #444; padding: 10px;">CO</th>
+          <th style="border: 1px solid #444; padding: 10px;">O₃</th>
+          <th style="border: 1px solid #444; padding: 10px;">SO₂</th>
+          <th style="border: 1px solid #444; padding: 10px;">CH₄</th>
+          <th style="border: 1px solid #444; padding: 10px;">Temp</th>
+          <th style="border: 1px solid #444; padding: 10px;">Humidity</th>
+          <th style="border: 1px solid #444; padding: 10px;">AQI</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr id="value-row" style="background-color: #292929;">
+          <!-- JS will insert <td> with padding and borders here -->
+        </tr>
+        <tr id="level-row" style="background-color: #202020;">
+          <!-- JS will insert <td> with padding, color, borders here -->
+        </tr>
+      </tbody>
+    </table>
+
+  </div> <!-- end of scrollable wrapper -->
+
 </div>
-
-
-
-<div class="dashboard">
-    <!-- First Row of Pollutants -->
-    <div class="metric-card">
-        <h3>PM2.5</h3>
-        <div class="metric-values">
-            <p><span id="pm25_val">-- µg/m³</span></p>
-            <div class="level-card" id="pm25_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>PM10</h3>
-        <div class="metric-values">
-            <p><span id="pm10_val">-- µg/m³</span></p>
-            <div class="level-card" id="pm10_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>CO</h3>
-        <div class="metric-values">
-            <p><span id="co_val">-- ppm</span></p>
-            <div class="level-card" id="co_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>O3</h3>
-        <div class="metric-values">
-            <p><span id="o3_val">-- ppb</span></p>
-            <div class="level-card" id="o3_level">--</div>
-        </div>
-    </div>
-
-    <!-- Second Row of Pollutants -->
-    <div class="metric-card">
-        <h3>SO2</h3>
-        <div class="metric-values">
-            <p><span id="so2_val">-- ppm</span></p>
-            <div class="level-card" id="so2_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>CH4</h3>
-        <div class="metric-values">
-            <p><span id="ch4_val">-- ppm</span></p>
-            <div class="level-card" id="ch4_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Temperature</h3>
-        <div class="metric-values">
-            <p><span id="temp_val">--°C</span></p>
-            <div class="level-card" id="temp_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Humidity</h3>
-        <div class="metric-values">
-            <p><span id="hum_val">--%</span></p>
-            <div class="level-card" id="hum_level">--</div>
-        </div>
-    </div>
-</div>
-
 
 <script>
 function updateSensorData() {
-    fetch('http://localhost/thesiss/air_quality_ml/prediction_1h.txt')
+    fetch('http://localhost/thesiss/air_quality_ml/forecast_data_api.php') 
         .then(response => response.text())
         .then(text => {
             const blocks = text.trim().split('----').map(block => block.trim()).filter(b => b);
-            const latestBlock = blocks[blocks.length - 1];
+            const latestBlocks = blocks.slice(-8); // Get the latest 8 blocks only
 
-            const lines = latestBlock.split('\n').map(line => line.trim());
-            const data = {};
+            // Update the timestamp to reflect the range
+            const firstTimestamp = latestBlocks[0].match(/Timestamp:\s*(.+)/)[1];
+            const lastTimestamp = latestBlocks[latestBlocks.length - 1].match(/Timestamp:\s*(.+)/)[1];
+            document.getElementById('timestamp').textContent = `8-Hour Air Quality Forecast: ${firstTimestamp} - ${lastTimestamp}`;
 
-            lines.forEach(line => {
-                if (line.startsWith('Timestamp:')) {
-                    data.timestamp = line.replace('Timestamp:', '').trim();
-                } else if (line.includes(':')) {
-                    const [key, value] = line.split(':').map(s => s.trim());
-                    switch (key.toLowerCase()) {
-                        case 'temp': data.TEMP = parseFloat(value); break;
-                        case 'hum': data.HUM = parseFloat(value); break;
-                        case 'ch4': data.CH4 = parseFloat(value); break;
-                        case 'co': data.CO = parseFloat(value); break;
-                        case 'so2': data.H2 = parseFloat(value); break; // still using H2 for compatibility
-                        case 'o3': data.O3 = parseFloat(value); break;
-                        case 'pm25': data.PM25 = parseFloat(value); break;
-                        case 'pm10': data.PM10 = parseFloat(value); break;
-                        case 'aqi': data.AQI = parseFloat(value); break;
+            const tbody = document.querySelector('.aqi-prediction-container tbody');
+            tbody.innerHTML = ''; // Clear previous rows
+
+            latestBlocks.forEach(block => {
+                const lines = block.split('\n').map(line => line.trim());
+                const data = {};
+
+                lines.forEach(line => {
+                    if (line.startsWith('Timestamp:')) {
+                        data.timestamp = line.replace('Timestamp:', '').trim();
+                    } else if (line.startsWith('Hour:')) {
+                        data.hour = line.replace('Hour:', '').trim();
+                    } else if (line.includes(':')) {
+                        const [key, value] = line.split(':').map(s => s.trim());
+                        data[key.toLowerCase()] = parseFloat(value);
                     }
-                }
+                });
+
+                const pollutants = ['pm25', 'pm10', 'co', 'o3', 'so2', 'ch4', 'temp', 'hum', 'aqi'];
+
+                const valueRow = document.createElement('tr');
+                valueRow.style.backgroundColor = '#292929';
+
+                const levelRow = document.createElement('tr');
+                levelRow.style.backgroundColor = '#000000';
+
+                const hourCell = document.createElement('td');
+                hourCell.textContent = data.hour;
+                hourCell.setAttribute('rowspan', '2');
+                hourCell.style.border = '1px solid #444';
+                hourCell.style.padding = '10px';
+                hourCell.style.backgroundColor = '#2a2a2a';
+                hourCell.style.fontWeight = 'bold';
+                valueRow.appendChild(hourCell);
+
+                pollutants.forEach(key => {
+                    const val = data[key];
+                    const tdValue = document.createElement('td');
+                    const tdLevel = document.createElement('td');
+
+                    tdValue.textContent = (key === 'temp') ? `${val}°C` :
+                                          (key === 'hum') ? `${val}%` :
+                                          (key === 'o3') ? `${val} ppm` :
+                                          (key === 'pm25') ? `${val} µg/m³` :
+                                          (key === 'pm10') ? `${val} µg/m³` :
+                                          (key === 'co') ? `${val} ppm` :
+                                          (key === 'so2') ? `${val} ppb` :
+                                          (key === 'ch4') ? `${val} ppm` :
+                                          (key === 'aqi') ? val.toFixed(2) :
+                                          `${val}`;
+                    
+                                        tdValue.style.padding = '10px';
+                                        tdValue.style.border = '1px solid #444';
+                                        tdValue.style.boxSizing = 'border-box';
+                                       
+
+
+                    let levelInfo;
+                    switch (key) {
+                        case 'pm25': levelInfo = getPM25Level(val); break;
+                        case 'pm10': levelInfo = getPM10Level(val); break;
+                        case 'co': levelInfo = getCOLevel(val); break;
+                        case 'o3': levelInfo = getO3Level(val); break;
+                        case 'so2': levelInfo = getSO2Level(val); break;
+                        case 'ch4': levelInfo = getCH4Level(val); break;
+                        case 'temp': levelInfo = getTempLevel(val); break;
+                        case 'hum': levelInfo = getHumLevel(val); break;
+                        case 'aqi': levelInfo = getAQILevel(val); break;
+                    }
+
+                    tdLevel.textContent = levelInfo.level;
+                    tdLevel.style.backgroundColor = levelInfo.color;
+                    tdLevel.style.padding = '2px';
+                    tdLevel.style.margin = '0';
+                    tdLevel.style.border = '1px solid #555';
+                    tdLevel.style.boxSizing = 'border-box';
+
+
+                    valueRow.appendChild(tdValue);
+                    levelRow.appendChild(tdLevel);
+                });
+
+                tbody.appendChild(valueRow);
+tbody.appendChild(levelRow);
+
+// Add a spacer row between hour sets
+const spacer = document.createElement('tr');
+const spacerTd = document.createElement('td');
+spacerTd.colSpan = 10; // number of columns in your table
+spacerTd.style.height = '10px'; // space height
+spacer.appendChild(spacerTd);
+tbody.appendChild(spacer);
+
             });
-
-            // Update AQI display
-            document.getElementById('aqi_title').textContent = '1-Hour Forecast for ' + data.timestamp;
-            document.getElementById('aqi_display').textContent = 'AQI Prediction: ' + data.AQI.toFixed(2);
-
-            // Apply AQI level
-            applyLevel('aqi_level', getAQILevel(data.AQI));
-
-            // Update metric cards
-            document.getElementById('pm25_val').textContent = data.PM25 + ' µg/m³';
-            document.getElementById('pm10_val').textContent = data.PM10 + ' µg/m³';
-            document.getElementById('co_val').textContent = data.CO + ' ppm';
-            document.getElementById('o3_val').textContent = data.O3 + ' ppb';
-            document.getElementById('so2_val').textContent = data.H2 + ' ppm';
-            document.getElementById('ch4_val').textContent = data.CH4 + ' ppm';
-            document.getElementById('temp_val').textContent = data.TEMP + '°C';
-            document.getElementById('hum_val').textContent = data.HUM + '%';
-
-            // Update level indicators
-            applyLevel('pm25_level', getPM25Level(data.PM25));
-            applyLevel('pm10_level', getPM10Level(data.PM10));
-            applyLevel('co_level', getCOLevel(data.CO));
-            applyLevel('o3_level', getO3Level(data.O3));
-            applyLevel('so2_level', getSO2Level(data.H2));
-            applyLevel('ch4_level', getCH4Level(data.CH4));
-            applyLevel('temp_level', getTempLevel(data.TEMP));
-            applyLevel('hum_level', getHumLevel(data.HUM));
         })
-        .catch(error => {
-            console.error('Fetch error:', error);
-        });
+        .catch(error => console.error('Error fetching prediction data:', error));
 }
+
 
 function applyLevel(elementId, levelInfo) {
     const el = document.getElementById(elementId);

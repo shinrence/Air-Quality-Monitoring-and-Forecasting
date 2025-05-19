@@ -28,9 +28,10 @@ def load_models():
 def read_latest_data():
     with open(data_path, 'r') as f:
         lines = f.readlines()
-        if len(lines) < 1080:
-            raise ValueError("Not enough data. At least 1080 entries are required.")
-        recent_lines = lines[-1080:]
+        if len(lines) < 2880:
+            raise ValueError("Not enough data. At least 2880 entries are required.")
+        recent_lines = lines[-2880:]
+
         values = {p: [] for p in targets}
 
         for line in recent_lines:

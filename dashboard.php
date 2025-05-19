@@ -377,7 +377,7 @@ button:hover {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 20px;
+    padding: 0px;
     max-width: 1000px;
 }
 
@@ -474,6 +474,54 @@ nav ul li a:hover {
         max-width: 300px;
     }
 }
+
+.aqi-bottom-container {
+    display: flex;
+    justify-content: center; /* centers children horizontally */
+    gap: 45px; /* spacing between containers */
+    width: 100%;
+    max-width: 1200px; /* same as top container */
+    margin: 0 auto; /* center the flex container itself */
+    margin-top: -20px;
+}
+
+.aqi-statement-container,
+.aqi-secondary-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    padding:0px 15px;
+    margin-left: -12px;
+    margin-right: -12px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+#aqiDetailsLink {
+    margin-left: 5px;
+}
+
+.aqi-statement-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.aqi-icon {
+    font-size: 35px;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
 
 /* Dashboard Container */
 .dashboard {
@@ -739,8 +787,8 @@ footer {
             <ul>
                 <li><a href="index.php">Home</a></li>
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="history.php">Reports</a></li>
-                <li><a href="about.php">About</a></li>
+                <li><a href="reports.php">Reports</a></li>
+                <li><a href="history.php">History</a></li>
             </ul>
         </nav>
     </header>
@@ -771,7 +819,7 @@ footer {
                 </a>
             </div>
 
-            <!-- Pie Chart -->
+            <!-- Main Pollutant Circle -->
             <div class="pie-chart-wrapper">
             <!-- Replace your <canvas id="pollutantChart"> with this -->
 <div style="display: flex; justify-content: center; align-items: center; height: 300px;">
@@ -807,12 +855,12 @@ footer {
 <div class="pollutant-trend-chart-container">
         <div class="pollutant-select-bar">
             <select id="pollutantSelect">
-                <option value="pm25">PM2.5</option>
-                <option value="pm10">PM10</option>
-                <option value="co">CO</option>
-                <option value="o3">O₃</option>
-                <option value="so2">SO₂</option>
-                <option value="ch4">CH₄</option>
+                <option value="pm25">Particulate Matter 2.5</option>
+                <option value="pm10">Partuculate Matter 10</option>
+                <option value="co">Carbon Monoxide</option>
+                <option value="o3">Ground-Level Ozone</option>
+                <option value="so2">Sulfur Dioxide</option>
+                <option value="ch4">Methane</option>
                 <option value="temp">Temperature</option>
                 <option value="hum">Humidity</option>
             </select>
@@ -825,190 +873,298 @@ footer {
 </div>
 
 
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const ctx = document.getElementById("pollutantTrendChart").getContext("2d");
+    const selectEl = document.getElementById("pollutantSelect");
 
-    // Initialize empty structures
+    const aqiLevels = [
+        { level: "Good", max: 50, color: "#388e3c" },
+        { level: "Satisfactory", max: 100, color: "#ff9800" },
+        { level: "Moderate", max: 150, color: "#ff5722" },
+        { level: "Poor", max: 200, color: "#d32f2f" },
+        { level: "Very Poor", max: 300, color: "#7b1fa2" },
+        { level: "Severe", max: 500, color: "#9e1e32" }
+    ];
+
+    const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "hum"];
+    const labels = {
+        pm25: "PM2.5 (µg/m³)",
+        pm10: "PM10 (µg/m³)",
+        co:   "CO (ppm)",
+        o3:   "O₃ (ppb)",
+        so2:  "SO₂ (ppb)",
+        ch4:  "CH₄ (ppm)",
+        temp: "Temperature (°C)",
+        hum:  "Humidity (%)"
+    };
+    const maxValues = {
+        pm25: 301,
+        pm10: 301,
+        co: 50,
+        o3: 5,
+        so2: 10,
+        ch4: 5,
+        temp: 40,
+        hum: 100
+    };
+
+    const aqiKeysMap = {
+        AQI_PM25: "pm25",
+        AQI_PM10: "pm10",
+        AQI_CO: "co",
+        AQI_O3: "o3",
+        AQI_SO2: "so2"
+        // Exclude CH4, TEMP, HUM
+    };
+
+    let currentPollutant = "pm25";
+    let chart;
+
     const pollutantData = {};
+    pollutants.forEach(p => pollutantData[p] = { label: labels[p], data: [], max: maxValues[p] });
     const timeLabels = [];
 
-    fetch('fetch_sensor_data.php')
-        .then(response => response.json())
-        .then(data => {
-            // Populate timeLabels and pollutant data
-            const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "hum"];
-            const labels = {
-                pm25: "PM2.5 (µg/m³)",
-                pm10: "PM10 (µg/m³)",
-                co:   "CO (ppm)",
-                o3:   "O₃ (ppb)",
-                so2:  "SO₂ (ppb)",
-                ch4:  "CH₄ (ppm)",
-                temp: "Temperature (°C)",
-                hum:  "Humidity (%)"
-            };
-            const colors = {
-                pm25: "#3e95cd",
-                pm10: "#27ae60",
-                co:   "#e67e22",
-                o3:   "#9b59b6",
-                so2:  "#e74c3c",
-                ch4:  "#f39c12",
-                temp: "#3498db",
-                hum:  "#1abc9c"
-            };
-            const maxValues = {
-                pm25: 301,
-                pm10: 301,
-                co: 50,
-                o3: 5,
-                so2: 10,
-                ch4: 5,
-                temp: 40,
-                hum: 100
-            };
+    function getAQIColor(avgValue) {
+        for (const level of aqiLevels) {
+            if (avgValue <= level.max) return level.color;
+        }
+        return "#9e1e32";
+    }
 
-            // Initialize empty arrays for each pollutant
-            pollutants.forEach(p => pollutantData[p] = { label: labels[p], data: [], color: colors[p], max: maxValues[p] });
+    function calculateAverage(dataArray) {
+        const sum = dataArray.reduce((acc, val) => acc + val, 0);
+        return dataArray.length ? sum / dataArray.length : 0;
+    }
 
-            data.forEach(entry => {
-                const hour = new Date(entry.hour);
-                const label = hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                timeLabels.push(label);
+    function updateChartColor(pollutantKey) {
+        const avg = calculateAverage(pollutantData[pollutantKey].data);
+        return getAQIColor(avg);
+    }
 
-                pollutantData.pm25.data.push(parseFloat(entry.avg_pm25));
-                pollutantData.pm10.data.push(parseFloat(entry.avg_pm10));
-                pollutantData.co.data.push(parseFloat(entry.avg_co));
-                pollutantData.o3.data.push(parseFloat(entry.avg_o3));
-                pollutantData.so2.data.push(parseFloat(entry.avg_so2));
-                pollutantData.ch4.data.push(parseFloat(entry.avg_ch4));
-                pollutantData.temp.data.push(parseFloat(entry.avg_temp));
-                pollutantData.hum.data.push(parseFloat(entry.avg_hum));
-            });
+    function createChart(pollutantKey) {
+        const avgColor = updateChartColor(pollutantKey);
 
-            let currentPollutant = "pm25";
-
-            const chart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: timeLabels,
-                    datasets: [{
-                        label: pollutantData[currentPollutant].label,
-                        data: pollutantData[currentPollutant].data,
-                        borderColor: pollutantData[currentPollutant].color,
-                        backgroundColor: pollutantData[currentPollutant].color + "33",
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointBackgroundColor: pollutantData[currentPollutant].color,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: "Time",
-                                color: "#cccccc",
-                                font: {
-                                    family: "Poppins",
-                                    size: 14
-                                }
-                            },
-                            ticks: {
-                                color: "#bbbbbb",
-                                font: {
-                                    family: "Poppins",
-                                    size: 12
-                                }
-                            },
-                            grid: {
-                                color: "#444444"
-                            }
+        return new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: pollutantData[pollutantKey].label,
+                    data: pollutantData[pollutantKey].data,
+                    borderColor: avgColor,
+                    backgroundColor: avgColor + "33",
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: avgColor,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: "Time",
+                            color: "#cccccc",
+                            font: { family: "Poppins", size: 14 }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: pollutantData[currentPollutant].label,
-                                color: "#cccccc",
-                                font: {
-                                    family: "Poppins",
-                                    size: 14
-                                }
-                            },
-                            ticks: {
-                                color: "#bbbbbb",
-                                font: {
-                                    family: "Poppins",
-                                    size: 12
-                                }
-                            },
-                            grid: {
-                                color: "#444444"
-                            },
-                            min: 0,
-                            max: pollutantData[currentPollutant].max
-                        }
+                        ticks: {
+                            color: "#bbbbbb",
+                            font: { family: "Poppins", size: 12 }
+                        },
+                        grid: { color: "#444444" }
                     },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            titleColor: "#ffffff",
-                            bodyColor: "#eeeeee",
-                            backgroundColor: "#333333",
-                            titleFont: {
-                                family: "Poppins",
-                                size: 14
-                            },
-                            bodyFont: {
-                                family: "Poppins",
-                                size: 12
-                            }
-                        }
+                    y: {
+                        title: {
+                            display: true,
+                            text: pollutantData[pollutantKey].label,
+                            color: "#cccccc",
+                            font: { family: "Poppins", size: 14 }
+                        },
+                        ticks: {
+                            color: "#bbbbbb",
+                            font: { family: "Poppins", size: 12 }
+                        },
+                        grid: { color: "#444444" },
+                        min: 0,
+                        max: pollutantData[pollutantKey].max
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        titleColor: "#ffffff",
+                        bodyColor: "#eeeeee",
+                        backgroundColor: "#333333",
+                        titleFont: { family: "Poppins", size: 14 },
+                        bodyFont: { family: "Poppins", size: 12 }
                     }
                 }
-            });
-
-            // Handle dropdown change
-            document.getElementById("pollutantSelect").addEventListener("change", function () {
-                currentPollutant = this.value;
-                chart.data.datasets[0].label = pollutantData[currentPollutant].label;
-                chart.data.datasets[0].data = pollutantData[currentPollutant].data;
-                chart.data.datasets[0].borderColor = pollutantData[currentPollutant].color;
-                chart.data.datasets[0].backgroundColor = pollutantData[currentPollutant].color + "33";
-                chart.data.datasets[0].pointBackgroundColor = pollutantData[currentPollutant].color;
-                chart.options.scales.y.title.text = pollutantData[currentPollutant].label;
-                chart.options.scales.y.max = pollutantData[currentPollutant].max;
-                chart.update();
-            });
-
-        })
-        .catch(error => {
-            console.error("Error loading sensor data:", error);
+            }
         });
+    }
+
+    function fetchTrendDataAndInitialize() {
+        fetch('fetch_sensor_data.php')
+            .then(response => response.json())
+            .then(data => {
+                timeLabels.length = 0;
+                pollutants.forEach(p => pollutantData[p].data = []);
+                data.forEach(entry => {
+                    const hour = new Date(entry.hour);
+                    const label = hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    timeLabels.push(label);
+                    pollutantData.pm25.data.push(parseFloat(entry.avg_pm25));
+                    pollutantData.pm10.data.push(parseFloat(entry.avg_pm10));
+                    pollutantData.co.data.push(parseFloat(entry.avg_co));
+                    pollutantData.o3.data.push(parseFloat(entry.avg_o3));
+                    pollutantData.so2.data.push(parseFloat(entry.avg_so2));
+                    pollutantData.ch4.data.push(parseFloat(entry.avg_ch4));
+                    pollutantData.temp.data.push(parseFloat(entry.avg_temp));
+                    pollutantData.hum.data.push(parseFloat(entry.avg_hum));
+                });
+
+                fetchLatestAQIData(); // trigger chart creation
+            });
+    }
+
+    function fetchLatestAQIData() {
+        fetch('latest_data_api.php')
+            .then(res => res.json())
+            .then(latest => {
+                let maxAQI = -1;
+                let dominantPollutant = currentPollutant;
+
+                Object.entries(aqiKeysMap).forEach(([aqiKey, pollutantKey]) => {
+                    const aqiVal = parseFloat(latest[aqiKey]);
+                    if (aqiVal > maxAQI) {
+                        maxAQI = aqiVal;
+                        dominantPollutant = pollutantKey;
+                    }
+                });
+
+                if (dominantPollutant !== currentPollutant) {
+                    currentPollutant = dominantPollutant;
+                    selectEl.value = currentPollutant;
+                    if (chart) chart.destroy();
+                    chart = createChart(currentPollutant);
+                }
+            });
+    }
+
+    selectEl.addEventListener("change", function () {
+        currentPollutant = this.value;
+        if (chart) chart.destroy();
+        chart = createChart(currentPollutant);
+    });
+
+    fetchTrendDataAndInitialize();
+
+    // Refresh chart selection every 5 seconds
+    setInterval(() => {
+        fetchLatestAQIData();
+    }, 5000);
 });
+
 </script>
 
 
-
-
-
-
-   
 </div>
 
     </div>
 </div>
 
+<div class="aqi-bottom-container">
+    <!-- First Bottom Container: Cautionary Statement -->
+    <div class="aqi-statement-container">
+  <div class="aqi-statement-content">
+    <span id="aqiIcon" class="aqi-icon">🌫️</span>
+    <p id="aqiCautionaryStatement">
+      Loading... <a id="aqiDetailsLink" href="#" style="color: #fff; text-decoration: underline; display: none;">Click here to view more details</a>
+    </p>
+  </div>
+</div>
+
+
+    <!-- Second Bottom Container: Reserved for future use -->
+    <div class="aqi-secondary-container">
+        <p>Reserved for additional AQI-related content.</p>
+    </div>
+</div>
+
+<script>
+async function updateCautionaryStatement() {
+    try {
+        const response = await fetch('latest_data_api.php');
+        const data = await response.json();
+        const aqi = parseInt(data.AQI);
+        
+
+        const levels = [
+            { level: "Good", max: 50, color: "#388e3c", statement: "Air quality is considered satisfactory, and air pollution poses little or no risk." },
+            { level: "Satisfactory", max: 100, color: "#ff9800", statement: "Air quality is acceptable, but some pollutants may be a concern for sensitive individuals." },
+            { level: "Moderate", max: 150, color: "#ff5722", statement: "Members of sensitive groups may experience health effects, but the general public is unlikely to be affected." },
+            { level: "Poor", max: 200, color: "#d32f2f", statement: "Everyone may begin to experience health effects; members of sensitive groups may experience more serious effects." },
+            { level: "Very Poor", max: 300, color: "#7b1fa2", statement: "Health alert: Everyone may experience more serious health effects." },
+            { level: "Severe", max: 500, color: "#9e1e32", statement: "Health warning of emergency conditions: The entire population is more likely to be affected." }
+        ];
+
+        const icons = {
+    "Good": "🟢",
+    "Satisfactory": "😊",
+    "Moderate": "😐",
+    "Poor": "😷",
+    "Very Poor": "🤢",
+    "Severe": "☠️"
+};
+
+const levelInfo = levels.find(l => aqi <= l.max);
+const levelName = levelInfo.level.toLowerCase().replace(/\s+/g, '_');
+const link = document.getElementById('aqiDetailsLink');
+const icon = document.getElementById('aqiIcon');
+
+const statementText = `Air Quality Level is ${levelInfo.level}. ${levelInfo.statement}`;
+
+const container = document.querySelector('.aqi-statement-container');
+const paragraph = document.getElementById('aqiCautionaryStatement');
+
+container.style.backgroundColor = levelInfo.color;
+paragraph.childNodes[0].nodeValue = statementText + " ";
+link.href = `${levelName}_aqi_details.php`;
+link.style.display = 'inline';
+
+icon.textContent = icons[levelInfo.level];
+
+
+        container.style.backgroundColor = levelInfo.color;
+            //container.style.border = `3px solid ${levelInfo.color}`;
+        paragraph.childNodes[0].nodeValue = statementText + " "; // replace only the text before the link
+        link.href = `${levelName}_aqi_details.php`;
+        link.style.display = 'inline';
+
+    } catch (error) {
+        console.error('Error fetching AQI data:', error);
+        document.getElementById('aqiCautionaryStatement').textContent = "Unable to load AQI statement.";
+        document.getElementById('aqiDetailsLink').style.display = 'none';
+    }
+}
+
+
+// Call the function on page load
+updateCautionaryStatement();
+
+setInterval(updateCautionaryStatement, 5000); //   
+
+</script>
+
 <div class="dashboard">
     <!-- First Row of Pollutants -->
     <div class="metric-card">
-        <h3>PM2.5</h3>
+        <h3>Particulate Matter 2.5</h3>
         <div class="metric-values">
             <p><span id="pm25_val">-- µg/m³</span></p>
             <div class="level-card" id="pm25_level">--</div>
@@ -1016,7 +1172,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 
     <div class="metric-card">
-        <h3>PM10</h3>
+        <h3>Particulate Matter 10</h3>
         <div class="metric-values">
             <p><span id="pm10_val">-- µg/m³</span></p>
             <div class="level-card" id="pm10_level">--</div>
@@ -1024,7 +1180,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 
     <div class="metric-card">
-        <h3>CO</h3>
+        <h3>Carbon Monoxide</h3>
         <div class="metric-values">
             <p><span id="co_val">-- ppm</span></p>
             <div class="level-card" id="co_level">--</div>
@@ -1032,24 +1188,24 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 
     <div class="metric-card">
-        <h3>O3</h3>
+        <h3>Ground-Level Ozone</h3>
         <div class="metric-values">
-            <p><span id="o3_val">-- ppb</span></p>
+            <p><span id="o3_val">-- ppm</span></p>
             <div class="level-card" id="o3_level">--</div>
         </div>
     </div>
 
     <!-- Second Row of Pollutants -->
     <div class="metric-card">
-        <h3>SO2</h3>
+        <h3>Sulfure Dioxide</h3>
         <div class="metric-values">
-            <p><span id="so2_val">-- ppm</span></p>
+            <p><span id="so2_val">-- ppb</span></p>
             <div class="level-card" id="so2_level">--</div>
         </div>
     </div>
 
     <div class="metric-card">
-        <h3>CH4</h3>
+        <h3>Methane</h3>
         <div class="metric-values">
             <p><span id="ch4_val">-- ppm</span></p>
             <div class="level-card" id="ch4_level">--</div>
@@ -1075,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
    <div class="aqi-trend-chart-container">
-   <h2 class="aqi-trend-title">AQI Trend Over Time</h2>
+   <h2 class="aqi-trend-title">Air Quality Index Trend Over Time</h2>
     <div id="aqiTrendContainer">
         <canvas id="aqiTrendChart"></canvas>
     </div>
@@ -1137,16 +1293,22 @@ setInterval(fetchAndUpdateAQI, 5000);
 </script>
 
 
-<script>
+<script> 
+function getAQIColor(aqi) {
+    if (aqi <= 50) return "#388e3c"; // Good - Green
+    if (aqi <= 100) return "#ff9800"; // Satisfactory - Yellow
+    if (aqi <= 150) return "#ff5722"; // Moderate - Orange
+    if (aqi <= 200) return "#d32f2f"; // Poor - Red
+    if (aqi <= 300) return "#7b1fa2"; // Very Poor - Purple
+    return "#9e1e32"; // Severe - Maroon
+}
+
 function updateMainPollutantDisplay(pollutants) {
     let maxAQI = -1;
     let mainPollutant = "---";
 
-    // Debug: print all AQI values to console
-    console.log("Pollutant AQIs:", pollutants);
-
     for (let key in pollutants) {
-        const aqi = Number(pollutants[key]); // Ensure it's a number
+        const aqi = Number(pollutants[key]);
         if (!isNaN(aqi) && aqi > maxAQI) {
             maxAQI = aqi;
             mainPollutant = key;
@@ -1155,9 +1317,12 @@ function updateMainPollutantDisplay(pollutants) {
 
     // Update the pollutant name inside the circle
     document.getElementById("mainPollutantText").textContent = mainPollutant.toUpperCase();
+
+    // Update the circle stroke color based on AQI level
+    const color = getAQIColor(maxAQI);
+    document.getElementById("mainPollutantCircle").setAttribute("stroke", color);
 }
 
-// Function to fetch data from latest_data_api.php and update main pollutant
 function fetchAndUpdateMainPollutant() {
     fetch("latest_data_api.php")
         .then(response => response.json())
@@ -1167,7 +1332,6 @@ function fetchAndUpdateMainPollutant() {
                 return;
             }
 
-            // Convert AQI values to numbers if needed
             const pollutants = {
                 "PM2.5": data.AQI_PM25,
                 "PM10": data.AQI_PM10,
@@ -1192,13 +1356,15 @@ setInterval(fetchAndUpdateMainPollutant, 5000);
 
 
 
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     var ctx = document.getElementById("aqiTrendChart").getContext("2d");
 
-    let aqiData = [50, 60, 70, 65, 80, 90, 85, 30]; // AQI values
-    let timeLabels = ["10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM"]; // Time labels
+    let aqiData = [];
+    let timeLabels = [];
 
+    // Initialize chart (empty)
     var aqiTrendChart = new Chart(ctx, {
         type: "line",
         data: {
@@ -1212,93 +1378,80 @@ document.addEventListener("DOMContentLoaded", function () {
                 pointRadius: 4,
                 pointBackgroundColor: "#ff5733",
                 fill: true,
-                tension: 0.4 // Smooth curve
+                tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-    x: {
-        title: {
-            display: true,
-            text: "Time",
-            color: "#cccccc",
-            font: {
-                family: "Poppins",
-                size: 14
-            }
-        },
-        ticks: {
-            color: "#bbbbbb",
-            font: {
-                family: "Poppins",
-                size: 12
-            }
-        },
-        grid: {
-            color: "#444444" // Dark gray for grid lines (lighter than black)
-        }
-    },
-    y: {
-        title: {
-            display: true,
-            text: "AQI Value",
-            color: "#cccccc",
-            font: {
-                family: "Poppins",
-                size: 14
-            }
-        },
-        ticks: {
-            color: "#bbbbbb",
-            font: {
-                family: "Poppins",
-                size: 12
-            }
-        },
-        grid: {
-            color: "#444444" // Dark gray for Y-axis grid lines
-        },
-        min: 0,
-        max: 300
-    }
-}
-,
-            plugins: {
-                legend: {
-                    display: false // Hide legend to save space
+                x: {
+                    title: {
+                        display: true,
+                        text: "Time",
+                        color: "#cccccc",
+                        font: { family: "Poppins", size: 14 }
+                    },
+                    ticks: {
+                        color: "#bbbbbb",
+                        font: { family: "Poppins", size: 12 }
+                    },
+                    grid: {
+                        color: "#444444"
+                    }
                 },
+                y: {
+                    title: {
+                        display: true,
+                        text: "AQI Value",
+                        color: "#cccccc",
+                        font: { family: "Poppins", size: 14 }
+                    },
+                    ticks: {
+                        color: "#bbbbbb",
+                        font: { family: "Poppins", size: 12 }
+                    },
+                    grid: {
+                        color: "#444444"
+                    },
+                    min: 0,
+                    max: 300
+                }
+            },
+            plugins: {
+                legend: { display: false },
                 tooltip: {
                     titleColor: "#ffffff",
                     bodyColor: "#eeeeee",
                     backgroundColor: "#333333",
-                    titleFont: {
-                        family: "Poppins",
-                        size: 14
-                    },
-                    bodyFont: {
-                        family: "Poppins",
-                        size: 12
-                    }
+                    titleFont: { family: "Poppins", size: 14 },
+                    bodyFont: { family: "Poppins", size: 12 }
                 }
             }
         }
     });
 
-    // Function to Update Chart Dynamically
-    function updateChart(newAQI, newLabel) {
-        if (aqiData.length >= 7) {
-            aqiData.shift();
-            timeLabels.shift();
-        }
-        aqiData.push(newAQI);
-        timeLabels.push(newLabel);
-        aqiTrendChart.update();
-    }
-});
+    // Fetch and update chart
+    fetch('fetch_sensor_data.php')
+        .then(response => response.json())
+        .then(data => {
+            const sortedData = data.sort((a, b) => new Date(a.hour) - new Date(b.hour));
+            
+            sortedData.forEach(entry => {
+                let date = new Date(entry.hour);
+                let formattedHour = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                aqiData.push(entry.avg_aqi);
+                timeLabels.push(formattedHour);
+            });
 
+            aqiTrendChart.update();
+        })
+        .catch(error => {
+            console.error("Failed to load AQI data:", error);
+        });
+});
 </script>
+
 
 <script>
 function updateSensorData() {
@@ -1316,7 +1469,7 @@ function updateSensorData() {
             document.getElementById('pm10_val').textContent = data.PM10 + ' µg/m³';
             document.getElementById('co_val').textContent = data.CO + ' ppm';
             document.getElementById('o3_val').textContent = data.O3 + ' ppb';
-            document.getElementById('so2_val').textContent = so2 + ' ppm';
+            document.getElementById('so2_val').textContent = so2 + ' ppb';
             document.getElementById('ch4_val').textContent = data.CH4 + ' ppm';
             document.getElementById('temp_val').textContent = data.TEMP + '°C';
             document.getElementById('hum_val').textContent = data.HUM + '%';
@@ -1363,19 +1516,19 @@ function getPM10Level(v) {
 
 function getCOLevel(v) {
     if (v <= 35) return { level: 'Good', color: 'green' };
-    if (v <= 50) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 69) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 89) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 109) return { level: 'Unhealthy', color: 'purple' };
+    if (v <= 80) return { level: 'Moderate', color: 'yellow' };
+    if (v <= 100) return { level: 'Unhealthy', color: 'orange' };
+    if (v <= 200) return { level: 'Unhealthy', color: 'red' };
+    if (v <= 400) return { level: 'Unhealthy', color: 'purple' };
     return { level: 'Hazardous', color: 'maroon' };
 }
 
 function getO3Level(v) {
-    if (v <= 0.074) return { level: 'Good', color: 'green' };
-    if (v <= 0.124) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 0.164) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 0.204) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 0.404) return { level: 'Unhealthy', color: 'purple' };
+    if (v <= 54) return { level: 'Good', color: 'green' };
+    if (v <= 124) return { level: 'Moderate', color: 'yellow' };
+    if (v <= 164) return { level: 'Unhealthy', color: 'orange' };
+    if (v <= 204) return { level: 'Unhealthy', color: 'red' };
+    if (v <= 404) return { level: 'Unhealthy', color: 'purple' };
     return { level: 'Hazardous', color: 'maroon' };
 }
 
@@ -1389,10 +1542,10 @@ function getSO2Level(v) {
 }
 
 function getCH4Level(v) {
-    if (v <= 50) return { level: 'Good', color: 'green' };
-    if (v <= 100) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 200) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 400) return { level: 'Unhealthy', color: 'red' };
+    if (v <= 100) return { level: 'Good', color: 'green' };
+    if (v <= 500) return { level: 'Moderate', color: 'yellow' };
+    if (v <= 1000) return { level: 'Unhealthy', color: 'orange' };
+    if (v <= 5000) return { level: 'Unhealthy', color: 'red' };
     return { level: 'Hazardous', color: 'purple' };
 }
 
