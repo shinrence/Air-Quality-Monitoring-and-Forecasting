@@ -29,6 +29,3 @@ foreach ($data as $line) {
 header('Content-Type: application/json');
 echo json_encode($predictions);
 ?>
-
-
-

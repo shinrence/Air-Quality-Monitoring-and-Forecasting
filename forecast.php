@@ -277,7 +277,7 @@ th, td {
 
 <script>
 function updateSensorData() {
-    fetch('http://localhost/thesiss/air_quality_ml/forecast_data_api.php') 
+    fetch('forecast_data_api.php') 
         .then(response => response.text())
         .then(text => {
             const blocks = text.trim().split('----').map(block => block.trim()).filter(b => b);
