@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: air-quality-monitoring-and-forecasting
+    name: air-quality-php-backend
     env: docker
     plan: free
+    dockerfilePath: ./Dockerfile
     branch: main
-    repo: https://github.com/shinrence/Air-Quality-Monitoring-and-Forecasting
-
+    autoDeploy: true
