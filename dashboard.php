@@ -1320,7 +1320,7 @@ async function updateDashboardFromAPI() {
             pm10: { val: parseFloat(data.PM10), getLevel: getPM10Level },
             co: { val: parseFloat(data.CO), getLevel: getCOLevel },
             o3: { val: parseFloat(data.O3), getLevel: getO3Level },
-            so2: { val: parseFloat(data.AQI_SO2), getLevel: getSO2Level },
+            so2: { val: parseFloat(data.H2), getLevel: getSO2Level },
             ch4: { val: parseFloat(data.CH4), getLevel: getCH4Level },
             temp: { val: parseFloat(data.TEMP), getLevel: getTempLevel },
             hum: { val: parseFloat(data.HUM), getLevel: getHumLevel },
@@ -1847,7 +1847,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script>
 function updateSensorData() {
-    fetch('https://air-quality-php-backend.onrender.com/latest_data_api.php')
+    fetch('latest_data_api.php')
         .then(response => response.json())
         .then(data => {
             if (data.error) {
