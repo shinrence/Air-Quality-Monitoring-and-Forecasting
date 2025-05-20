@@ -6,7 +6,7 @@ const char* ssid     = "Infinix";
 const char* password = "zxcvbnm1";
 
 // Server URL
-const char* serverUrl = "http://192.168.82.238/thesiss/data_receive.php";
+const char* serverUrl = "https://air-quality-php-backend.onrender.com/data_receive.php";
 
 // Function to encode URL parameters
 String urlEncode(const String& str) {

@@ -182,7 +182,7 @@ button:hover {
 /* AQI Trend Chart Container */
 .aqi-trend-chart-container {
     width: 94.5%; /* Adjust the overall width */
-    max-width: 1300px; /* Prevents stretching on large screens */
+    max-width: 1200px; /* Prevents stretching on large screens */
     height: auto; /* Auto height to fit content */
     display: flex;
     flex-direction: column; /* Ensures text & chart are stacked properly */
@@ -327,11 +327,6 @@ button:hover {
     box-shadow: 0px 4px 10px rgba(0, 51, 160, 0.3);
 }
 
-.forecast-button-wrapper button:hover {
-    background: linear-gradient(135deg, #0055FF, #0033A0);
-    transform: scale(1.05);
-    box-shadow: 0px 6px 15px rgba(0, 51, 160, 0.5);
-}
 
 .forecast-button-wrapper button:active {
     transform: scale(0.98);
@@ -360,11 +355,7 @@ button:hover {
     box-shadow: 0px 4px 10px rgba(0, 51, 160, 0.3);
 }
 
-.learn-more-button-wrapper button:hover {
-    background: linear-gradient(135deg, #0055FF, #0033A0);
-    transform: scale(1.05);
-    box-shadow: 0px 6px 15px rgba(0, 51, 160, 0.5);
-}
+
 
 .learn-more-button-wrapper button:active {
     transform: scale(0.98);
@@ -538,6 +529,7 @@ nav ul li a:hover {
 
 /* Pollutant Cards */
 .metric-card {
+    position: relative;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     padding: 20px;
@@ -545,6 +537,28 @@ nav ul li a:hover {
     text-align: center;
     box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-icon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    background-color: gray; /* Default, will be updated dynamically */
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+    line-height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 10;
+}
+
+.info-icon:hover {
+    transform: scale(1.1);
 }
 
 /* Glow effect based on severity */
@@ -778,6 +792,8 @@ footer {
     }
 }
 
+
+
     </style>
 </head>
 <body>
@@ -863,6 +879,7 @@ footer {
                 <option value="ch4">Methane</option>
                 <option value="temp">Temperature</option>
                 <option value="hum">Humidity</option>
+                <option value="aqi">Overall AQI</option>
             </select>
         </div>
         <h2 class="aqi-trend-title">Pollutant Trends</h2>
@@ -893,7 +910,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch('fetch_sensor_data.php')
         .then(response => response.json())
         .then(data => {
-            const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "hum"];
+            const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "hum", "aqi"];
             const labels = {
                 pm25: "PM2.5 (µg/m³)",
                 pm10: "PM10 (µg/m³)",
@@ -902,7 +919,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 so2:  "SO₂ (ppb)",
                 ch4:  "CH₄ (ppm)",
                 temp: "Temperature (°C)",
-                hum:  "Humidity (%)"
+                hum:  "Humidity (%)",
+                aqi:  "Air Quality Index"
             };
             const maxValues = {
                 pm25: 301,
@@ -912,7 +930,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 so2: 10,
                 ch4: 5,
                 temp: 40,
-                hum: 100
+                hum: 100,
+                aqi: 500
             };
 
             pollutants.forEach(p => pollutantData[p] = { label: labels[p], data: [], max: maxValues[p] });
@@ -930,6 +949,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 pollutantData.ch4.data.push(parseFloat(entry.avg_ch4));
                 pollutantData.temp.data.push(parseFloat(entry.avg_temp));
                 pollutantData.hum.data.push(parseFloat(entry.avg_hum));
+                pollutantData.aqi.data.push(parseFloat(entry.avg_aqi ?? entry.AQI));
+
             });
 
             // Fetch latest AQI data to determine initial pollutant
@@ -1072,7 +1093,7 @@ document.addEventListener("DOMContentLoaded", function () {
   <div class="aqi-statement-content">
     <span id="aqiIcon" class="aqi-icon">🌫️</span>
     <p id="aqiCautionaryStatement">
-      Loading... <a id="aqiDetailsLink" href="#" style="color: #fff; text-decoration: underline; display: none;">Click here to view more details</a>
+      Loading... <a id="aqiDetailsLink" href="#" style="color: #000000; display: none;">View More</a>
     </p>
   </div>
 </div>
@@ -1083,6 +1104,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <p>Reserved for additional AQI-related content.</p>
     </div>
 </div>
+
 
 <script>
 async function updateCautionaryStatement() {
@@ -1152,71 +1174,89 @@ setInterval(updateCautionaryStatement, 5000); //
 <div class="dashboard">
     <!-- First Row of Pollutants -->
     <div class="metric-card">
-        <h3>Particulate Matter 2.5</h3>
-        <div class="metric-values">
-            <p><span id="pm25_val">-- µg/m³</span></p>
-            <div class="level-card" id="pm25_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Particulate Matter 10</h3>
-        <div class="metric-values">
-            <p><span id="pm10_val">-- µg/m³</span></p>
-            <div class="level-card" id="pm10_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Carbon Monoxide</h3>
-        <div class="metric-values">
-            <p><span id="co_val">-- ppm</span></p>
-            <div class="level-card" id="co_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Ground-Level Ozone</h3>
-        <div class="metric-values">
-            <p><span id="o3_val">-- ppm</span></p>
-            <div class="level-card" id="o3_level">--</div>
-        </div>
-    </div>
-
-    <!-- Second Row of Pollutants -->
-    <div class="metric-card">
-        <h3>Sulfure Dioxide</h3>
-        <div class="metric-values">
-            <p><span id="so2_val">-- ppb</span></p>
-            <div class="level-card" id="so2_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Methane</h3>
-        <div class="metric-values">
-            <p><span id="ch4_val">-- ppm</span></p>
-            <div class="level-card" id="ch4_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Temperature</h3>
-        <div class="metric-values">
-            <p><span id="temp_val">--°C</span></p>
-            <div class="level-card" id="temp_level">--</div>
-        </div>
-    </div>
-
-    <div class="metric-card">
-        <h3>Humidity</h3>
-        <div class="metric-values">
-            <p><span id="hum_val">--%</span></p>
-            <div class="level-card" id="hum_level">--</div>
-        </div>
+    <div class="info-icon" id="pm25_info" onclick="showInfo('pm25')">i</div>
+    <h3>Particulate Matter 2.5</h3>
+    <div class="metric-values">
+        <p><span id="pm25_val">-- µg/m³</span></p>
+        <div class="level-card" id="pm25_level">--</div>
     </div>
 </div>
 
+<div class="metric-card">
+    <div class="info-icon" id="pm10_info" onclick="showInfo('pm10')">i</div>
+    <h3>Particulate Matter 10</h3>
+    <div class="metric-values">
+        <p><span id="pm10_val">-- µg/m³</span></p>
+        <div class="level-card" id="pm10_level">--</div>
+    </div>
+</div>
+
+<div class="metric-card">
+    <div class="info-icon" id="co_info" onclick="showInfo('co')">i</div>
+    <h3>Carbon Monoxide (CO)</h3>
+    <div class="metric-values">
+        <p><span id="co_val">-- ppm</span></p>
+        <div class="level-card" id="co_level">--</div>
+    </div>
+</div>
+
+<div class="metric-card">
+    <div class="info-icon" id="o3_info" onclick="showInfo('o3')">i</div>
+    <h3>Ozone (O₃)</h3>
+    <div class="metric-values">
+        <p><span id="o3_val">-- ppm</span></p>
+        <div class="level-card" id="o3_level">--</div>
+    </div>
+</div>
+
+<div class="metric-card">
+    <div class="info-icon" id="so2_info" onclick="showInfo('so2')">i</div>
+    <h3>Sulfur Dioxide (SO₂)</h3>
+    <div class="metric-values">
+        <p><span id="so2_val">-- ppm</span></p>
+        <div class="level-card" id="so2_level">--</div>
+    </div>
+</div>
+
+<div class="metric-card">
+    <div class="info-icon" id="temp_info" onclick="showInfo('temp')">i</div>
+    <h3>Temperature</h3>
+    <div class="metric-values">
+        <p><span id="temp_val">-- °C</span></p>
+        <div class="level-card" id="temp_level">--</div>
+    </div>
+</div>
+
+<div class="metric-card">
+    <div class="info-icon" id="hum_info" onclick="showInfo('hum')">i</div>
+    <h3>Humidity</h3>
+    <div class="metric-values">
+        <p><span id="hum_val">-- %</span></p>
+        <div class="level-card" id="hum_level">--</div>
+    </div>
+</div>
+
+<div class="metric-card">
+    <div class="info-icon" id="ch4_info" onclick="showInfo('ch4')">i</div>
+    <h3>Methane (CH₄)</h3>
+    <div class="metric-values">
+        <p><span id="ch4_val">-- ppm</span></p>
+        <div class="level-card" id="ch4_level">--</div>
+    </div>
+</div>
+
+</div>
+
+<div id="overlay" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+    display: none;
+"></div>
 
    <div class="aqi-trend-chart-container">
    <h2 class="aqi-trend-title">Air Quality Index Trend Over Time</h2>
@@ -1224,6 +1264,214 @@ setInterval(updateCautionaryStatement, 5000); //
         <canvas id="aqiTrendChart"></canvas>
     </div>
 </div>
+
+<script>
+
+const aqiGuidelines = {
+    pm25: {
+        good: "It’s a great day to be active outside.",
+        moderate: "Unusually sensitive people: Consider making outdoor activities shorter and less intense. Watch for symptoms such as coughing or shortness of breath.",
+        usg: "Sensitive groups: Make outdoor activities shorter and less intense. It’s OK to be active outdoors but take more breaks.",
+        unhealthy: "Sensitive groups: Do not do long or intense outdoor activities. Everyone else: Reduce long or intense outdoor activity.",
+        veryUnhealthy: "Sensitive groups: Avoid all physical activity outdoors. Everyone else: Avoid long or intense outdoor exertion.",
+        hazardous: "Everyone: Avoid all physical activity outdoors."
+    },
+    pm10: {
+        good: "It’s a great day to be active outside.",
+        moderate: "It’s a great day to be active outside.",
+        usg: "Sensitive groups: Make outdoor activities shorter and less intense.",
+        unhealthy: "Sensitive groups: Consider rescheduling or moving all activities inside. Everyone else: Keep outdoor activities shorter.",
+        veryUnhealthy: "Sensitive groups: Avoid all physical activity outdoors. Everyone else: Limit outdoor physical activity.",
+        hazardous: "Everyone: Avoid all physical activity outdoors."
+    },
+    co: {
+        good: "It’s a great day to be active outside.",
+        moderate: "It’s a great day to be active outside.",
+        usg: "Sensitive group: Limit heavy exertion outdoors and avoid sources of CO, such as heavy traffic.",
+        unhealthy: "Sensitive group: Limit moderate outdoor exertion and avoid sources of CO, such as heavy traffic.",
+        veryUnhealthy: "Sensitive group: Avoid outdoor exertion and sources of CO.",
+        hazardous: "Sensitive group: Avoid outdoor exertion and sources of CO. Everyone else: Limit heavy outdoor exertion."
+    },
+    o3: {
+        good: "It’s a great day to be active outside.",
+        moderate: "Unusually sensitive people: Consider making outdoor activities shorter and less intense.",
+        usg: "Sensitive groups: Make outdoor activities shorter and less intense. Plan outdoor activities in the morning.",
+        unhealthy: "Sensitive groups: Avoid long or intense outdoor activities. Everyone else: Reduce long or intense outdoor activity.",
+        veryUnhealthy: "Sensitive groups: Avoid all physical activity outdoors. Everyone else: Avoid long or intense outdoor exertion.",
+        hazardous: "Everyone: Avoid all physical activity outdoors."
+    },
+    so2: {
+        good: "It’s a great day to be active outside.",
+        moderate: "It’s a great day to be active outside.",
+        usg: "Sensitive groups: Consider limiting outdoor exertion.",
+        unhealthy: "Sensitive groups: Limit outdoor exertion.",
+        veryUnhealthy: "Sensitive groups: Avoid outdoor exertion. Everyone else: Reduce outdoor exertion.",
+        hazardous: "Sensitive groups: Remain indoors. Everyone else: Avoid outdoor exertion."
+    }
+};
+
+async function updateDashboardFromAPI() {
+    try {
+        const res = await fetch('latest_data_api.php');
+        const data = await res.json();
+
+        const pollutants = {
+            pm25: { val: parseFloat(data.PM25), getLevel: getPM25Level },
+            pm10: { val: parseFloat(data.PM10), getLevel: getPM10Level },
+            co: { val: parseFloat(data.CO), getLevel: getCOLevel },
+            o3: { val: parseFloat(data.O3), getLevel: getO3Level },
+            so2: { val: parseFloat(data.AQI_SO2), getLevel: getSO2Level },
+            ch4: { val: parseFloat(data.CH4), getLevel: getCH4Level },
+            temp: { val: parseFloat(data.TEMP), getLevel: getTempLevel },
+            hum: { val: parseFloat(data.HUM), getLevel: getHumLevel },
+        };
+
+        for (const key in pollutants) {
+            const { val, getLevel } = pollutants[key];
+            const level = getLevel(val);
+
+            // Update level card text and color
+            const levelEl = document.getElementById(`${key}_level`);
+            const infoEl = document.getElementById(`${key}_info`);
+
+            if (levelEl) {
+                levelEl.textContent = level.level;
+                levelEl.style.backgroundColor = level.color;
+            }
+
+            // Update info icon to match level color
+            // Show/hide info icon based on level category
+const visibleLevels = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous'];
+
+if (infoEl) {
+    infoEl.style.backgroundColor = level.color;
+
+    // Show or hide based on level
+    if (visibleLevels.includes(level.key)) {
+        infoEl.style.display = 'block';
+    } else {
+        infoEl.style.display = 'none';
+    }
+}
+
+
+            // Update value text
+            const valEl = document.getElementById(`${key}_val`);
+            if (valEl) {
+                let unit = '';
+                if (key === 'temp') unit = '°C';
+                else if (key === 'hum') unit = '%';
+                else if (['pm25', 'pm10'].includes(key)) unit = ' µg/m³';
+                else if (['co', 'ch4', 'o3'].includes(key)) unit = ' ppm';
+                else if (key === 'so2') unit = ' ppb';
+
+                valEl.textContent = `${val.toFixed(1)}${unit}`;
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load air quality data:', err);
+    }
+}
+
+// Sign icons for each AQI level
+const levelSigns = {
+    good: "✅",
+    moderate: "🟡",
+    usg: "⚠️",             // Unhealthy for Sensitive Groups
+    unhealthy: "🟥",
+    veryUnhealthy: "🛑",
+    hazardous: "☠️"
+};
+
+// Flag to prevent multiple cards
+let infoCardOpen = false;
+
+function showInfo(metric) {
+    if (infoCardOpen) return; // Prevent opening multiple cards
+
+    const levelEl = document.getElementById(`${metric}_level`);
+    const infoEl = document.getElementById(`${metric}_info`);
+    const levelText = levelEl?.textContent.toLowerCase();
+
+    let category = 'good'; // default
+    if (levelText.includes("moderate")) category = 'moderate';
+    else if (levelText.includes("sensitive")) category = 'usg';
+    else if (levelText.includes("unhealthy") && !levelText.includes("very")) category = 'unhealthy';
+    else if (levelText.includes("very")) category = 'veryUnhealthy';
+    else if (levelText.includes("hazardous")) category = 'hazardous';
+
+    const guideline = aqiGuidelines[metric]?.[category] || "No guideline available.";
+    const iconColor = window.getComputedStyle(infoEl).backgroundColor;
+    const sign = levelSigns[category] || "";
+
+    // Create overlay for dimming background
+    const overlay = document.createElement("div");
+    overlay.id = "infoOverlay";
+    Object.assign(overlay.style, {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 9998
+    });
+
+    // Create the info card
+    const card = document.createElement("div");
+    card.className = "info-card";
+    card.innerHTML = `
+        <strong>${sign} ${metric.toUpperCase()} - ${levelEl.textContent}</strong>
+        <p>${guideline}</p>
+        <button id="closeInfoCard">Close</button>
+    `;
+
+    // Style the card
+    Object.assign(card.style, {
+        position: 'fixed',
+        top: '35%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: '#232323',
+        backdropFilter: 'blur(10px)',
+        padding: '20px',
+        borderRadius: '10px',
+        zIndex: 9999,
+        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+        maxWidth: '450px',
+        width: '90%',
+        fontFamily: 'Poppins, sans-serif',
+        color: '#ffffff',
+        textAlign: 'center',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+    });
+
+    // Add to DOM
+    document.body.appendChild(overlay);
+    document.body.appendChild(card);
+
+    // Prevent multiple cards
+    infoCardOpen = true;
+
+    // Close handler
+    document.getElementById("closeInfoCard").onclick = function () {
+        card.remove();
+        overlay.remove();
+        infoCardOpen = false;
+    };
+}
+
+
+
+
+
+// Initial load and auto-refresh every 5 seconds
+window.onload = function () {
+    updateDashboardFromAPI();
+    setInterval(updateDashboardFromAPI, 5000);
+};
+</script>
+
 
 <script>
 function updateAQICircle(aqi) {
@@ -1440,6 +1688,162 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const levels = [
+        { level: "Good", max: 50, color: "#388e3c" },
+        { level: "Satisfactory", max: 100, color: "#ff9800" },
+        { level: "Moderate", max: 150, color: "#ff5722" },
+        { level: "Poor", max: 200, color: "#d32f2f" },
+        { level: "Very Poor", max: 300, color: "#7b1fa2" },
+        { level: "Severe", max: 500, color: "#9e1e32" }
+    ];
+
+    function updateButtonStyles(aqi) {
+        const level = levels.find(l => aqi <= l.max) || levels[levels.length - 1];
+        const baseColor = level.color;
+        const hoverColor = lightenDarkenColor(baseColor, 40); // Lighter color for hover
+
+        const styleId = 'dynamic-aqi-button-style';
+        let styleTag = document.getElementById(styleId);
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = styleId;
+            document.head.appendChild(styleTag);
+        }
+
+        styleTag.textContent = `
+            .forecast-button-wrapper button,
+            .learn-more-button-wrapper button {
+                background-color: ${baseColor} !important;
+                box-shadow: 0px 4px 10px ${baseColor}80 !important;
+                transition: all 0.3s ease-in-out !important;
+            }
+
+            .forecast-button-wrapper button:hover,
+            .learn-more-button-wrapper button:hover {
+                background-color: ${hoverColor} !important;
+                box-shadow: 0px 6px 15px ${hoverColor}cc !important;
+                transform: scale(1.05) !important;
+            }
+
+            .forecast-button-wrapper button:active,
+            .learn-more-button-wrapper button:active {
+                transform: scale(0.98) !important;
+                box-shadow: 0px 3px 8px ${baseColor}cc !important;
+            }
+        `;
+    }
+
+    function fetchAQIandUpdate() {
+        fetch('latest_data_api.php')
+            .then(res => res.json())
+            .then(data => {
+                const aqi = parseInt(data.AQI);
+                if (!isNaN(aqi)) {
+                    updateButtonStyles(aqi);
+                }
+            })
+            .catch(err => console.error('Failed to fetch AQI:', err));
+    }
+
+    function lightenDarkenColor(col, amt) {
+        let usePound = false;
+        if (col[0] === "#") {
+            col = col.slice(1);
+            usePound = true;
+        }
+
+        const num = parseInt(col, 16);
+        let r = (num >> 16) + amt;
+        let g = ((num >> 8) & 0x00FF) + amt;
+        let b = (num & 0x0000FF) + amt;
+
+        r = Math.max(Math.min(255, r), 0);
+        g = Math.max(Math.min(255, g), 0);
+        b = Math.max(Math.min(255, b), 0);
+
+        return (usePound ? "#" : "") + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    fetchAQIandUpdate();                   // Initial update
+    setInterval(fetchAQIandUpdate, 5000);  // Repeat every 5 seconds
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.querySelector(".aqi-secondary-container");
+
+    // Health risk messages ~ 25 words each
+    const healthMessages = {
+        pm25: "PM2.5 exposure can cause respiratory issues, aggravate asthma, and increase risk of heart disease and lung cancer.",
+        pm10: "PM10 particles penetrate lungs causing coughing, wheezing, and increased risk of respiratory infections and chronic bronchitis.",
+        co: "Carbon monoxide reduces oxygen delivery in the body, causing headaches, dizziness, and potentially fatal poisoning in high levels.",
+        o3: "Ozone exposure irritates airways, reduces lung function, and worsens asthma and other chronic respiratory diseases.",
+        so2: "Sulfur dioxide inflames respiratory tract, triggers asthma attacks, and can cause long-term lung damage with prolonged exposure.",
+        ch4: "Methane is a potent greenhouse gas but direct health impacts are minimal; it can displace oxygen in confined spaces.",
+        temp: "Extreme temperatures increase risk of heat exhaustion, heat stroke, dehydration, and can worsen cardiovascular and respiratory diseases.",
+        humidity: "High humidity can worsen breathing difficulties, promote mold growth, and increase discomfort for people with asthma.",
+        heatIndex: "Heat index measures combined effects of heat and humidity, indicating risk for heat-related illnesses including heat stroke."
+    };
+
+    // AQI background colors based on your guideline
+    function getAQIColor(aqi) {
+        if (aqi <= 50) return "#388e3c";       // Good - Green
+        if (aqi <= 100) return "#ff9800";      // Satisfactory - Yellow
+        if (aqi <= 150) return "#ff5722";      // Moderate - Orange
+        if (aqi <= 200) return "#d32f2f";      // Poor - Red
+        if (aqi <= 300) return "#7b1fa2";      // Very Poor - Purple
+        return "#9e1e32";                      // Severe - Maroon
+    }
+
+    // Pollutants order for slideshow
+    const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "humidity", "heatIndex"];
+
+    let currentIndex = 0;
+
+    // Function to update the slide text and background color
+    function updateSlide() {
+        fetch('latest_data_api.php')
+            .then(res => res.json())
+            .then(data => {
+                // Use overall AQI if available, fallback to PM2.5 AQI for example
+                // Assuming your API returns an overall AQI as "AQI" or you can compute max AQI here
+                let overallAQI = data.AQI || Math.max(
+                    data.AQI_PM25 || 0,
+                    data.AQI_PM10 || 0,
+                    data.AQI_CO || 0,
+                    data.AQI_O3 || 0,
+                    data.AQI_SO2 || 0
+                );
+
+                // Update background color
+                container.style.backgroundColor = getAQIColor(overallAQI);
+
+                // Update text content
+                const pollutantKey = pollutants[currentIndex];
+                container.textContent = healthMessages[pollutantKey] || "No data available.";
+
+                // Move to next slide index (loop back)
+                currentIndex = (currentIndex + 1) % pollutants.length;
+            })
+            .catch(() => {
+                // On fetch error fallback:
+                container.style.backgroundColor = "#388e3c"; // Good - Green
+                const pollutantKey = pollutants[currentIndex];
+                container.textContent = healthMessages[pollutantKey] || "No data available.";
+                currentIndex = (currentIndex + 1) % pollutants.length;
+            });
+    }
+
+    // Initialize first slide
+    updateSlide();
+
+    // Switch slide every 10 seconds
+    setInterval(updateSlide, 10000);
+});
+</script>
 
 <script>
 function updateSensorData() {
@@ -1483,50 +1887,49 @@ function applyLevel(elementId, levelInfo) {
     el.style.backgroundColor = levelInfo.color;
 }
 
-// Threshold Functions
 function getPM25Level(v) {
-    if (v <= 9) return { level: 'Good', color: 'green' };
-    if (v <= 35.4) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 55.4) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 120.4) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 225.4) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 9) return { level: 'Good', color: 'green', key: "good" };
+    if (v <= 35.4) return { level: 'Moderate', color: 'yellow', key: "moderate" };
+    if (v <= 55.4) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
+    if (v <= 120.4) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
+    if (v <= 225.4) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
 }
 
 function getPM10Level(v) {
-    if (v <= 54) return { level: 'Good', color: 'green' };
-    if (v <= 154) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 254) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 354) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 424) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 54) return { level: 'Good', color: 'green', key: "good" };
+    if (v <= 154) return { level: 'Moderate', color: 'yellow', key: "moderate" };
+    if (v <= 254) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
+    if (v <= 354) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
+    if (v <= 424) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
 }
 
 function getCOLevel(v) {
-    if (v <= 35) return { level: 'Good', color: 'green' };
-    if (v <= 80) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 100) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 200) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 400) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 35) return { level: 'Good', color: 'green', key: "good" };
+    if (v <= 80) return { level: 'Moderate', color: 'yellow', key: "moderate" };
+    if (v <= 100) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
+    if (v <= 200) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
+    if (v <= 400) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
 }
 
 function getO3Level(v) {
-    if (v <= 54) return { level: 'Good', color: 'green' };
-    if (v <= 124) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 164) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 204) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 404) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 54) return { level: 'Good', color: 'green', key: "good" };
+    if (v <= 124) return { level: 'Moderate', color: 'yellow', key: "moderate" };
+    if (v <= 164) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
+    if (v <= 204) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
+    if (v <= 404) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
 }
 
 function getSO2Level(v) {
-    if (v <= 35) return { level: 'Good', color: 'green' };
-    if (v <= 75) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 185) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 304) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 604) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 35) return { level: 'Good', color: 'green', key: "good" };
+    if (v <= 75) return { level: 'Moderate', color: 'yellow', key: "moderate" };
+    if (v <= 185) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
+    if (v <= 304) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
+    if (v <= 604) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
 }
 
 function getCH4Level(v) {
@@ -1539,7 +1942,7 @@ function getCH4Level(v) {
 
 // Temperature Level Function
 function getTempLevel(v) {
-    if (v <= 25) return { level: 'Cool', color: 'blue' };
+    if (v <= 25) return { level: 'Good', color: 'green' };
     if (v <= 31) return { level: 'Good', color: 'lightblue' };
     if (v <= 32) return { level: 'Warm', color: 'yellow' };
     if (v <= 35) return { level: 'Hot', color: 'orange' };
@@ -1551,7 +1954,7 @@ function getTempLevel(v) {
 function getHumLevel(v) {
     if (v <= 39) return { level: 'Too Dry', color: 'brown' };
     if (v <= 60) return { level: 'Optimal', color: 'green' };
-    return { level: 'Too Humid', color: 'purple' };
+    return { level: 'Too Humid', color: 'green' };
 }
 
 // Start once and repeat every 5 seconds
