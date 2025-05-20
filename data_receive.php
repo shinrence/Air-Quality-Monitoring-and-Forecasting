@@ -10,10 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['data'])) {
     $parsed_data['timestamp'] = date("Y-m-d H:i:s");
 
     // Convert to JSON and append to file with newline
-    file_put_contents('https://air-quality-php-backend.onrender.com/all_data_log.txt', json_encode($parsed_data) . PHP_EOL, FILE_APPEND);
+    file_put_contents('all_data_log.txt', json_encode($parsed_data) . PHP_EOL, FILE_APPEND);
 
     // Optional: update the latest data file too
-    file_put_contents('https://air-quality-php-backend.onrender.com/latest_data.txt', json_encode($parsed_data));
+    file_put_contents('latest_data.txt', json_encode($parsed_data));
 
     echo "✅ Data saved successfully!";
 } else {
