@@ -1847,7 +1847,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script>
 function updateSensorData() {
-    fetch('latest_data_api.php')
+    fetch('https://air-quality-php-backend.onrender.com/latest_data_api.php')
         .then(response => response.json())
         .then(data => {
             if (data.error) {

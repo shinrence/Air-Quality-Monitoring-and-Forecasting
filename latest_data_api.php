@@ -1,5 +1,5 @@
 <?php
-$filename = 'latest_data.txt';
+$filename = 'https://air-quality-php-backend.onrender.com/latest_data.txt';
 
 if (file_exists($filename)) {
     $json = file_get_contents($filename);
