@@ -13,7 +13,8 @@ try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $stmt = $pdo->query("SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT 1");
+    $stmt = $pdo->query("SELECT sensor_data.*, (timestamp + INTERVAL '8 hours') AS timestamp FROM sensor_data ORDER BY timestamp DESC LIMIT 1");
+
     $latest = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($latest) {
