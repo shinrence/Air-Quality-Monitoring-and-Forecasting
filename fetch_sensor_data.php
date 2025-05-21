@@ -42,7 +42,8 @@ foreach ($entries as $entry) {
     }
     if ($missing) continue;
 
-    $hour = date('Y-m-d H:00:00', strtotime($entry['timestamp'] . ' +8 hours'));
+    $hour = date('Y-m-d H:00:00', strtotime($entry['timestamp']));
+
 
 
     if (!isset($data_by_hour[$hour])) {

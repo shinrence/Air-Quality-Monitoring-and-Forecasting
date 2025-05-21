@@ -104,8 +104,9 @@ void readPMS() {
       }
 
       pm1_0_val = (buf[10] << 8) | buf[11];
-      pm2_5_val = (buf[12] << 8) | buf[13];
-      pm10_val  = (buf[14] << 8) | buf[15];
+      pm2_5_val = ((buf[12] << 8) | buf[13]) / 4;  // divide by 4 here
+      pm10_val  = ((buf[14] << 8) | buf[15]) / 4;  // divide by 4 here
+
 
       // --- Conditional override for abnormal PMS values ---
       int checkVals[] = {66, 256, 512, 768, 1024, 1280, 1536};
@@ -196,7 +197,7 @@ void setup() {
 void loop() {
   Serial.println("====== Air Quality Data ======");
 
-  float temp = dht.readTemperature();
+  float temp = dht.readTemperature() - 2;  // subtract 2 degrees
   float hum  = dht.readHumidity();
   if (isnan(temp) || isnan(hum)) {
     temp = hum = 0;
