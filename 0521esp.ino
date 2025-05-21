@@ -94,41 +94,30 @@ void loop() {
 
 
 // Send data to server
-// Send data to server
-void sendToServer(const String& rawPayload) {
-if (WiFi.status() == WL_CONNECTED) {
-WiFiClient client;
-HTTPClient http;
+void sendToServer(const String& payload) {
+  if (WiFi.status() == WL_CONNECTED) {
+    WiFiClient client;
+    HTTPClient http;
 
     http.begin(client, serverUrl);
-http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-// Wrap the raw data string in a POST variable called "data"
-String postData = "data=" + rawPayload;  // no need to URL encode, PHP's parse_str handles it
+    String postData = "data=" + urlEncode(payload);
+    int httpResponseCode = http.POST(postData);
 
-Serial.print("📡 Sending POST data: ");
-Serial.println(postData);
+    if (httpResponseCode > 0) {
+      Serial.print("📤 Data sent successfully! Response Code: ");
+      Serial.println(httpResponseCode);
+    } else {
+      Serial.print("❌ Error sending data. Code: ");
+      Serial.println(httpResponseCode);
+    }
 
-int httpResponseCode = http.POST(postData);
-
-if (httpResponseCode > 0) {
-  Serial.print("✅ Response Code: ");
-  Serial.println(httpResponseCode);
-  String response = http.getString();
-  Serial.println("📨 Server Response:");
-  Serial.println(response);
-} else {
-  Serial.print("❌ POST Failed. HTTP Code: ");
-  Serial.println(httpResponseCode);
-}
-
-http.end();
-
+    http.end();
   } else {
-Serial.println("⚠️ Not connected to Wi-Fi.");
+    Serial.println("❌ Wi-Fi not connected.");
+  }
 }
-}
-
 
 
 
