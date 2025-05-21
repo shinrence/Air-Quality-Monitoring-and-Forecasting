@@ -136,16 +136,18 @@
     <label for="pollutant">Select Pollutant:</label>
     <select id="pollutant">
       <option value="">-- Select Pollutant --</option>
-      <option value="PM25">PM2.5</option>
-      <option value="PM10">PM10</option>
-      <option value="CO">CO</option>
-      <option value="O3">O3</option>
-      <option value="SO2">SO2</option>
-      <option value="CH4">CH4</option>
-      <option value="TEMP">Temperature</option>
-      <option value="HUM">Humidity</option>
-      <option value="AQI">AQI</option>
+      <option value="temp">Temperature</option>
+      <option value="hum">Humidity</option>
+      <option value="ch4">Heat Index</option>
+      <option value="co">CO</option>
+      <option value="so2">SO₂</option>
+      <option value="o3">O₃</option>
+      <option value="pm1">PM1</option>
+      <option value="pm25">PM2.5</option>
+      <option value="pm10">PM10</option>
+      <option value="aqi_total">AQI - Overall</option>
     </select>
+
 
     <label for="date">Select Date:</label>
     <select id="date" disabled></select>
@@ -216,9 +218,9 @@
 
       relevantData.forEach(entry => {
         const hour = entry.timestamp.split(' ')[1].split(':')[0];
-        const value = parseFloat(
-            selectedPollutant === 'SO2' ? entry['H2'] : entry[selectedPollutant]
-        );
+        const pollutantKey = selectedPollutant.toLowerCase(); // match JSON keys
+        const value = parseFloat(entry[pollutantKey]);
+
 
         if (!isNaN(value)) {
           if (!hourlyGrouped[hour]) hourlyGrouped[hour] = [];
@@ -314,12 +316,11 @@
   const endHour = startHour;
   const period = intHour >= 12 ? 'PM' : 'AM';
 
-  if (fullRange) {
-    return `${startHour}:00 - ${endHour}:59 ${period}`;
-  } else {
-    return `${startHour}:00 ${period}`;
-  }
+  return fullRange
+    ? `${startHour}:00 - ${startHour}:59 ${period}`
+    : `${startHour}:00 ${period}`;
 }
+
 
 
   </script>
