@@ -1,23 +1,32 @@
 <?php
-$filename = 'all_data_log.txt';
+$api_url = 'all_data_log_api.php'; // Or full URL if hosted elsewhere
 
-// Check if file exists
-if (!file_exists($filename)) {
+// Fetch data from API
+$response = file_get_contents($api_url);
+
+if ($response === false) {
     http_response_code(500);
-    echo json_encode(['error' => 'Data file not found.']);
+    echo json_encode(['error' => 'Failed to fetch data from API.']);
     exit;
 }
 
-$lines = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+// Decode the JSON
+$entries = json_decode($response, true);
+
+if (!is_array($entries)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Invalid data format from API.']);
+    exit;
+}
+
 $data_by_hour = [];
 
-foreach ($lines as $line) {
-    $entry = json_decode($line, true);
-    if (!$entry || !isset($entry['timestamp'])) continue;
+foreach ($entries as $entry) {
+    if (!isset($entry['timestamp'])) continue;
 
-    // Add AQI fields to required keys
-    $required_keys = ['TEMP', 'HUM', 'CH4', 'CO', 'H2', 'O3', 'PM25', 'PM10',
-                      'AQI_PM25', 'AQI_PM10', 'AQI_CO', 'AQI_SO2', 'AQI_O3', 'AQI'];
+    // Add AQI fields to required keys (updated keys based on API data)
+    $required_keys = ['temp', 'hum', 'ch4', 'co', 'h2', 'o3', 'pm25', 'pm10',
+                      'aqi_pm25', 'aqi_pm10', 'aqi_co', 'aqi_so2', 'aqi_o3', 'aqi_total'];
     $missing = false;
     foreach ($required_keys as $key) {
         if (!isset($entry[$key])) {
@@ -27,7 +36,6 @@ foreach ($lines as $line) {
     }
     if ($missing) continue;
 
-    // Get hour key
     $hour = date('Y-m-d H:00:00', strtotime($entry['timestamp']));
 
     if (!isset($data_by_hour[$hour])) {
@@ -41,20 +49,20 @@ foreach ($lines as $line) {
     }
 
     $data_by_hour[$hour]['count']++;
-    $data_by_hour[$hour]['temp']     += floatval($entry['TEMP']);
-    $data_by_hour[$hour]['hum']      += floatval($entry['HUM']);
-    $data_by_hour[$hour]['ch4']      += floatval($entry['CH4']);
-    $data_by_hour[$hour]['co']       += floatval($entry['CO']);
-    $data_by_hour[$hour]['so2']      += floatval($entry['H2']); // H2 as SO2
-    $data_by_hour[$hour]['o3']       += floatval($entry['O3']);
-    $data_by_hour[$hour]['pm25']     += floatval($entry['PM25']);
-    $data_by_hour[$hour]['pm10']     += floatval($entry['PM10']);
-    $data_by_hour[$hour]['aqi_pm25'] += floatval($entry['AQI_PM25']);
-    $data_by_hour[$hour]['aqi_pm10'] += floatval($entry['AQI_PM10']);
-    $data_by_hour[$hour]['aqi_co']   += floatval($entry['AQI_CO']);
-    $data_by_hour[$hour]['aqi_so2']  += floatval($entry['AQI_SO2']);
-    $data_by_hour[$hour]['aqi_o3']   += floatval($entry['AQI_O3']);
-    $data_by_hour[$hour]['aqi']      += floatval($entry['AQI']);
+    $data_by_hour[$hour]['temp']     += floatval($entry['temp']);
+    $data_by_hour[$hour]['hum']      += floatval($entry['hum']);
+    $data_by_hour[$hour]['ch4']      += floatval($entry['ch4']);
+    $data_by_hour[$hour]['co']       += floatval($entry['co']);
+    $data_by_hour[$hour]['so2']      += floatval($entry['h2']); // h2 used as so2
+    $data_by_hour[$hour]['o3']       += floatval($entry['o3']);
+    $data_by_hour[$hour]['pm25']     += floatval($entry['pm25']);
+    $data_by_hour[$hour]['pm10']     += floatval($entry['pm10']);
+    $data_by_hour[$hour]['aqi_pm25'] += floatval($entry['aqi_pm25']);
+    $data_by_hour[$hour]['aqi_pm10'] += floatval($entry['aqi_pm10']);
+    $data_by_hour[$hour]['aqi_co']   += floatval($entry['aqi_co']);
+    $data_by_hour[$hour]['aqi_so2']  += floatval($entry['aqi_so2']);
+    $data_by_hour[$hour]['aqi_o3']   += floatval($entry['aqi_o3']);
+    $data_by_hour[$hour]['aqi']      += floatval($entry['aqi_total']);
 }
 
 // Sort by hour descending
@@ -89,5 +97,6 @@ foreach ($data_by_hour as $hour => $values) {
 $averaged_data = array_reverse($averaged_data);
 header('Content-Type: application/json');
 echo json_encode($averaged_data);
+
 
 

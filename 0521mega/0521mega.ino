@@ -131,7 +131,7 @@ void readPMS() {
 
 
 float calibrateCO(int analogValue) {
-  float value = analogValue - 260;
+  float value = analogValue - 330;
   return (value <= 0) ? 0.01 : value;
 }
 
