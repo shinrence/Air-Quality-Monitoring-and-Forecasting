@@ -1,16 +1,27 @@
 <?php
+// Enable output buffering to prevent header issues
+ob_start();
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
 // Set timezone
 date_default_timezone_set('Asia/Manila');
 
+// Debug: log raw POST data for testing
+$debug_log = [
+    'method' => $_SERVER['REQUEST_METHOD'],
+    'post_data' => $_POST,
+];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['data'])) {
     $raw_data = $_POST['data'];
     parse_str($raw_data, $parsed_data);
 
-    // PostgreSQL database config
-    $host = "dpg-d0mr2al6ubrc73em1abg-a.oregon-postgres.render.com"; // external host
+    // Append parsed data to debug log
+    $debug_log['parsed_data'] = $parsed_data;
+
+    // PostgreSQL config
+    $host = "dpg-d0mr2al6ubrc73em1abg-a.oregon-postgres.render.com";
     $port = "5432";
     $dbname = "sensor_db_8z7o";
     $user = "shinrence";
@@ -38,11 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['data'])) {
             ':pm10'=> $parsed_data['PM10']
         ]);
 
-        echo json_encode(["success" => true, "message" => "✅ Data saved to database."]);
+        $debug_log['success'] = true;
+        $debug_log['message'] = "✅ Data saved to database.";
     } catch (PDOException $e) {
-        echo json_encode(["success" => false, "message" => "❌ DB Error: " . $e->getMessage()]);
+        $debug_log['success'] = false;
+        $debug_log['message'] = "❌ DB Error: " . $e->getMessage();
     }
 } else {
-    echo json_encode(["success" => false, "message" => "🌐 Awaiting data from ESP8266 via POST..."]);
+    $debug_log['success'] = false;
+    $debug_log['message'] = "🌐 Awaiting data from ESP8266 via POST...";
 }
-?>
+
+// Output debug log as JSON
+echo json_encode($debug_log);
