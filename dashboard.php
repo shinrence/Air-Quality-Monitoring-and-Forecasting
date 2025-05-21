@@ -1223,7 +1223,7 @@ setInterval(updateCautionaryStatement, 5000); //
     <div class="info-icon" id="so2_info" onclick="showInfo('so2')">i</div>
     <h3>Sulfur Dioxide (SO₂)</h3>
     <div class="metric-values">
-        <p><span id="so2_val">-- ppm</span></p>
+        <p><span id="so2_val">-- ppb</span></p>
         <div class="level-card" id="so2_level">--</div>
     </div>
 </div>
@@ -1943,7 +1943,7 @@ function updateSensorData() {
             document.getElementById('co_val').textContent = data.co + ' ppm';
             document.getElementById('o3_val').textContent = data.o3 + ' ppb';
             document.getElementById('so2_val').textContent = so2 + ' ppb';
-            document.getElementById('ch4_val').textContent = data.ch4 + ' ppm'; // Changed °C to ppm for methane
+            document.getElementById('ch4_val').textContent = data.ch4 + ' °C'; // Changed °C to ppm for methane
             document.getElementById('temp_val').textContent = data.temp + '°C';
             document.getElementById('hum_val').textContent = data.hum + '%';
 
