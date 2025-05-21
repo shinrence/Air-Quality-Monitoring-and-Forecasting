@@ -958,12 +958,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(latest => {
                     const aqiKeys = {
-                        AQI_PM25: "pm25",
-                        AQI_PM10: "pm10",
-                        AQI_CO: "co",
-                        AQI_O3: "o3",
-                        AQI_SO2: "so2"
-                    };
+    aqi_pm25: "pm25",
+    aqi_pm10: "pm10",
+    aqi_co: "co",
+    aqi_o3: "o3",
+    aqi_so2: "so2"
+};
+
+for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
+    const value = parseFloat(latest[aqiKey.toLowerCase()]);
+    if (!isNaN(value) && value > maxAQI) {
+        maxAQI = value;
+        defaultPollutant = pollutantKey;
+    }
+}
+
 
                     let maxAQI = -1;
                     let defaultPollutant = "pm25"; // fallback
