@@ -10,12 +10,18 @@ if ($response === false) {
     exit;
 }
 
-// Decode the JSON
+// DEBUG: See what you got
+// echo $response;
+
 $entries = json_decode($response, true);
 
-if (!is_array($entries)) {
+if (json_last_error() !== JSON_ERROR_NONE) {
     http_response_code(500);
-    echo json_encode(['error' => 'Invalid data format from API.']);
+    echo json_encode([
+        'error' => 'Invalid data format from API.',
+        'json_error' => json_last_error_msg(),
+        'raw_response' => $response
+    ]);
     exit;
 }
 
