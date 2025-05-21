@@ -84,11 +84,11 @@
 
         /* AQI Colors */
         .good { background-color: #1b5e20; color: white; } /* Dark Green */
-        .satisfactory { background-color: #ffb300; color: black; } /* Darker Yellow */
-        .moderate { background-color: #ff8f00; color: black; } /* Darker Yellow than satisfactory */
-        .poor { background-color: #e65100; color: white; } /* Dark Orange */
-        .very-poor { background-color: #b71c1c; color: white; } /* Dark Red */
-        .severe { background-color: #4a001f; color: white; } /* Dark Maroon */
+        .moderate { background-color: #ffb300; color: black; } /* Darker Yellow */
+        .unhealthy-for-sensitive-groups { background-color: #ff8f00; color: black; } /* Darker Yellow than satisfactory */
+        .unhealthy { background-color: #e65100; color: white; } /* Dark Orange */
+        .very-unhealthy { background-color: #b71c1c; color: white; } /* Dark Red */
+        .hazardous { background-color: #4a001f; color: white; } /* Dark Maroon */
 
         /* Footer */
         footer {
@@ -108,8 +108,7 @@
                 <li><a href="index.php">Home</a></li>
                 <li><a href="dashboard.php">Dashboard</a></li>
                 <li><a href="history.php">History</a></li>
-                <li><a href="about.php">About</a></li>
-                <li><a href="aqi.php">AQI</a></li>
+                <li><a href="reports.php">About</a></li>
             </ul>
         </nav>
     </header>
@@ -129,28 +128,28 @@
                 <td>0 - 50</td>
                 <td>Air quality is considered satisfactory, and air pollution poses little or no risk.</td>
             </tr>
-            <tr class="satisfactory">
-                <td>Satisfactory</td>
+            <tr class="moderate">
+                <td>Moderate</td>
                 <td>51 - 100</td>
                 <td>Air quality is acceptable, but some pollutants may be a concern for sensitive individuals.</td>
             </tr>
-            <tr class="moderate">
-                <td>Moderate</td>
+            <tr class="unhealthy-for-sensitive-groups">
+                <td>Unhealthy for Sensitive Groups</td>
                 <td>101 - 150</td>
                 <td>Members of sensitive groups may experience health effects, but the general public is unlikely to be affected.</td>
             </tr>
-            <tr class="poor">
-                <td>Poor</td>
+            <tr class="unhealthy">
+                <td>Unhealthy</td>
                 <td>151 - 200</td>
                 <td>Everyone may begin to experience health effects; members of sensitive groups may experience more serious effects.</td>
             </tr>
-            <tr class="very-poor">
-                <td>Very Poor</td>
+            <tr class="very-unhealthy">
+                <td>Very Unhealthy</td>
                 <td>201 - 300</td>
                 <td>Health alert: Everyone may experience more serious health effects.</td>
             </tr>
-            <tr class="severe">
-                <td>Severe</td>
+            <tr class="hazardous">
+                <td>Hazardous</td>
                 <td>301 - 500</td>
                 <td>Health warning of emergency conditions: The entire population is more likely to be affected.</td>
             </tr>

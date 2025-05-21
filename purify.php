@@ -215,8 +215,8 @@
             <ul>
                 <li><a href="index.php">Home</a></li>
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="history.php">Reports</a></li>
-                <li><a href="about.php">About</a></li>
+                <li><a href="reports.php">Reports</a></li>
+                <li><a href="history.php">History</a></li>
             </ul>
         </nav>
     </header>

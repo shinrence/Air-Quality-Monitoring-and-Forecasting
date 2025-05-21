@@ -803,8 +803,8 @@ footer {
             <ul>
                 <li><a href="index.php">Home</a></li>
                 <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="reports.php">Reports</a></li>
                 <li><a href="history.php">History</a></li>
+                <li><a href="reports.php">About</a></li>
             </ul>
         </nav>
     </header>
@@ -876,9 +876,9 @@ footer {
                 <option value="co">Carbon Monoxide</option>
                 <option value="o3">Ground-Level Ozone</option>
                 <option value="so2">Sulfur Dioxide</option>
-                <option value="ch4">Methane</option>
                 <option value="temp">Temperature</option>
                 <option value="hum">Humidity</option>
+                <option value="ch4">Heat Index</option>
                 <option value="aqi">Overall AQI</option>
             </select>
         </div>
@@ -896,11 +896,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const aqiLevels = [
         { level: "Good", max: 50, color: "#388e3c" },
-        { level: "Satisfactory", max: 100, color: "#ff9800" },
-        { level: "Moderate", max: 150, color: "#ff5722" },
-        { level: "Poor", max: 200, color: "#d32f2f" },
-        { level: "Very Poor", max: 300, color: "#7b1fa2" },
-        { level: "Severe", max: 500, color: "#9e1e32" }
+        { level: "Moderate", max: 100, color: "#ff9800" },
+        { level: "Unhealthy for Sensitive Groups", max: 150, color: "#ff5722" },
+        { level: "Unhealthy", max: 200, color: "#d32f2f" },
+        { level: "Very Unhealthy", max: 300, color: "#7b1fa2" },
+        { level: "Hazardous", max: 500, color: "#9e1e32" }
     ];
 
     const pollutantData = {};
@@ -917,7 +917,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 co:   "CO (ppm)",
                 o3:   "O₃ (ppb)",
                 so2:  "SO₂ (ppb)",
-                ch4:  "CH₄ (ppm)",
+                ch4:  "",
                 temp: "Temperature (°C)",
                 hum:  "Humidity (%)",
                 aqi:  "Air Quality Index"
@@ -928,7 +928,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 co: 50,
                 o3: 5,
                 so2: 10,
-                ch4: 5,
+                ch4: 50,
                 temp: 40,
                 hum: 100,
                 aqi: 500
@@ -1116,20 +1116,20 @@ async function updateCautionaryStatement() {
 
         const levels = [
             { level: "Good", max: 50, color: "#388e3c", statement: "Air quality is considered satisfactory, and air pollution poses little or no risk." },
-            { level: "Satisfactory", max: 100, color: "#ff9800", statement: "Air quality is acceptable, but some pollutants may be a concern for sensitive individuals." },
-            { level: "Moderate", max: 150, color: "#ff5722", statement: "Members of sensitive groups may experience health effects, but the general public is unlikely to be affected." },
-            { level: "Poor", max: 200, color: "#d32f2f", statement: "Everyone may begin to experience health effects; members of sensitive groups may experience more serious effects." },
-            { level: "Very Poor", max: 300, color: "#7b1fa2", statement: "Health alert: Everyone may experience more serious health effects." },
-            { level: "Severe", max: 500, color: "#9e1e32", statement: "Health warning of emergency conditions: The entire population is more likely to be affected." }
+            { level: "Moderate", max: 100, color: "#ff9800", statement: "Air quality is acceptable, but some pollutants may be a concern for sensitive individuals." },
+            { level: "Unhealthy for Sensitive Groups", max: 150, color: "#ff5722", statement: "Members of sensitive groups may experience health effects, but the general public is unlikely to be affected." },
+            { level: "Unhealthy", max: 200, color: "#d32f2f", statement: "Everyone may begin to experience health effects; members of sensitive groups may experience more serious effects." },
+            { level: "Very Unhealthy", max: 300, color: "#7b1fa2", statement: "Health alert: Everyone may experience more serious health effects." },
+            { level: "Hazardous", max: 500, color: "#9e1e32", statement: "Air quality level is dangerous. The entire population is more likely to be affected." }
         ];
 
         const icons = {
     "Good": "🟢",
-    "Satisfactory": "😊",
-    "Moderate": "😐",
-    "Poor": "😷",
-    "Very Poor": "🤢",
-    "Severe": "☠️"
+    "Moderate": "😊",
+    "Unhealthy for Sensitive Groups": "😐",
+    "Unhealthy": "😷",
+    "Very Unhealthy": "🤢",
+    "Hazardous": "☠️"
 };
 
 const levelInfo = levels.find(l => aqi <= l.max);
@@ -1204,7 +1204,7 @@ setInterval(updateCautionaryStatement, 5000); //
     <div class="info-icon" id="o3_info" onclick="showInfo('o3')">i</div>
     <h3>Ozone (O₃)</h3>
     <div class="metric-values">
-        <p><span id="o3_val">-- ppm</span></p>
+        <p><span id="o3_val">-- ppb</span></p>
         <div class="level-card" id="o3_level">--</div>
     </div>
 </div>
@@ -1238,9 +1238,9 @@ setInterval(updateCautionaryStatement, 5000); //
 
 <div class="metric-card">
     <div class="info-icon" id="ch4_info" onclick="showInfo('ch4')">i</div>
-    <h3>Methane (CH₄)</h3>
+    <h3>Heat Index</h3>
     <div class="metric-values">
-        <p><span id="ch4_val">-- ppm</span></p>
+        <p><span id="ch4_val">-- °C</span></p>
         <div class="level-card" id="ch4_level">--</div>
     </div>
 </div>
@@ -1258,12 +1258,6 @@ setInterval(updateCautionaryStatement, 5000); //
     display: none;
 "></div>
 
-   <div class="aqi-trend-chart-container">
-   <h2 class="aqi-trend-title">Air Quality Index Trend Over Time</h2>
-    <div id="aqiTrendContainer">
-        <canvas id="aqiTrendChart"></canvas>
-    </div>
-</div>
 
 <script>
 
@@ -1278,7 +1272,7 @@ const aqiGuidelines = {
     },
     pm10: {
         good: "It’s a great day to be active outside.",
-        moderate: "It’s a great day to be active outside.",
+        moderate: "Unusually sensitive people: Consider making outdoor activities shorter and less intense. Watch for symptoms such as coughing or shortness of breath.",
         usg: "Sensitive groups: Make outdoor activities shorter and less intense.",
         unhealthy: "Sensitive groups: Consider rescheduling or moving all activities inside. Everyone else: Keep outdoor activities shorter.",
         veryUnhealthy: "Sensitive groups: Avoid all physical activity outdoors. Everyone else: Limit outdoor physical activity.",
@@ -1307,6 +1301,30 @@ const aqiGuidelines = {
         unhealthy: "Sensitive groups: Limit outdoor exertion.",
         veryUnhealthy: "Sensitive groups: Avoid outdoor exertion. Everyone else: Reduce outdoor exertion.",
         hazardous: "Sensitive groups: Remain indoors. Everyone else: Avoid outdoor exertion."
+    },
+    temp: {
+        cool: "Comfortable for outdoor activity. Light jacket may be needed.",
+        good: "Perfect temperature for most people to enjoy outdoor activities.",
+        warm: "Mild heat. Stay hydrated and avoid overexertion.",
+        hot: "Limit strenuous activity and take cooling breaks.",
+        veryHot: "Avoid outdoor exertion. Stay indoors during peak heat hours.",
+        extremeHeat: "Extreme caution: Risk of heatstroke. Stay indoors and keep cool."
+    },
+
+    // 💧 Humidity Guidelines
+    hum: {
+        tooDry: "Air is very dry. Use a humidifier and drink plenty of water.",
+        optimal: "Ideal indoor humidity for comfort and health.",
+        tooHumid: "Can feel muggy or uncomfortable. Watch for mold and allergies."
+    },
+
+    // 🌡️ Heat Index / CH₄ as Heat Indicator
+    ch4: {
+        good: "Feels comfortable. No heat-related risk.",
+        caution: "Mild discomfort possible. Take regular water breaks.",
+        extremeCaution: "Increased risk of heat-related illness. Limit prolonged exposure.",
+        danger: "Avoid heavy activity. Seek shade or air-conditioned places.",
+        extremeDanger: "Severe risk of heatstroke. Avoid going outdoors."
     }
 };
 
@@ -1341,7 +1359,10 @@ async function updateDashboardFromAPI() {
 
             // Update info icon to match level color
             // Show/hide info icon based on level category
-const visibleLevels = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous'];
+const visibleLevels = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous',
+    'warm', 'hot', 'veryHot', 'extremeHeat',
+    'tooDry', 'tooHumid',
+    'caution', 'extremeCaution', 'danger', 'extremeDanger'];
 
 if (infoEl) {
     infoEl.style.backgroundColor = level.color;
@@ -1362,8 +1383,10 @@ if (infoEl) {
                 if (key === 'temp') unit = '°C';
                 else if (key === 'hum') unit = '%';
                 else if (['pm25', 'pm10'].includes(key)) unit = ' µg/m³';
-                else if (['co', 'ch4', 'o3'].includes(key)) unit = ' ppm';
+                else if (['co'].includes(key)) unit = ' ppm';
+                else if (['ch4'].includes(key)) unit = ' °C';
                 else if (key === 'so2') unit = ' ppb';
+                else if (key === 'o3') unit = ' ppb';
 
                 valEl.textContent = `${val.toFixed(1)}${unit}`;
             }
@@ -1375,13 +1398,33 @@ if (infoEl) {
 
 // Sign icons for each AQI level
 const levelSigns = {
+    // AQI Levels
     good: "✅",
     moderate: "🟡",
     usg: "⚠️",             // Unhealthy for Sensitive Groups
     unhealthy: "🟥",
     veryUnhealthy: "🛑",
-    hazardous: "☠️"
+    hazardous: "☠️",
+
+    // Temperature Levels
+    cool: "❄️",
+    warm: "🌤️",
+    hot: "🔥",
+    veryHot: "🌡️",
+    extremeHeat: "☀️☠️",
+
+    // Humidity Levels
+    tooDry: "💧🚫",
+    optimal: "💧✅",
+    tooHumid: "💦⚠️",
+
+    // CH₄ Levels
+    caution: "🟠",
+    extremeCaution: "🔶",
+    danger: "🚨",
+    extremeDanger: "☣️"
 };
+
 
 // Flag to prevent multiple cards
 let infoCardOpen = false;
@@ -1393,12 +1436,32 @@ function showInfo(metric) {
     const infoEl = document.getElementById(`${metric}_info`);
     const levelText = levelEl?.textContent.toLowerCase();
 
-    let category = 'good'; // default
-    if (levelText.includes("moderate")) category = 'moderate';
-    else if (levelText.includes("sensitive")) category = 'usg';
-    else if (levelText.includes("unhealthy") && !levelText.includes("very")) category = 'unhealthy';
-    else if (levelText.includes("very")) category = 'veryUnhealthy';
-    else if (levelText.includes("hazardous")) category = 'hazardous';
+    let category = levelText.replace(/\s+/g, '').toLowerCase(); // default fallback
+
+// Normalize custom mappings
+const levelMap = {
+    'cool': 'cool',
+    'good': 'good',
+    'warm': 'warm',
+    'hot': 'hot',
+    'veryhot': 'veryHot',
+    'extremeheat': 'extremeHeat',
+    'toodry': 'tooDry',
+    'optimal': 'optimal',
+    'toohumid': 'tooHumid',
+    'caution': 'caution',
+    'extremecaution': 'extremeCaution',
+    'danger': 'danger',
+    'extremedanger': 'extremeDanger',
+    'moderate': 'moderate',
+    'sensitive': 'usg',
+    'unhealthy': 'unhealthy',
+    'veryunhealthy': 'veryUnhealthy',
+    'hazardous': 'hazardous'
+};
+
+category = levelMap[category] || 'good';
+
 
     const guideline = aqiGuidelines[metric]?.[category] || "No guideline available.";
     const iconColor = window.getComputedStyle(infoEl).backgroundColor;
@@ -1482,11 +1545,11 @@ function updateAQICircle(aqi) {
     // AQI levels and colors
     let aqiLevels = [
         { level: "Good", max: 50, color: "#388e3c" }, // Green
-        { level: "Satisfactory", max: 100, color: "#ff9800" }, // Yellow
-        { level: "Moderate", max: 150, color: "#ff5722" }, // Orange
-        { level: "Poor", max: 200, color: "#d32f2f" }, // Red
-        { level: "Very Poor", max: 300, color: "#7b1fa2" }, // Purple
-        { level: "Severe", max: 500, color: "#9e1e32" } // Maroon
+        { level: "Moderate", max: 100, color: "#ff9800" }, // Yellow
+        { level: "Unhealthy for Sensitive Groups", max: 150, color: "#ff5722" }, // Orange
+        { level: "Unhealthy", max: 200, color: "#d32f2f" }, // Red
+        { level: "Very Unhealthy", max: 300, color: "#7b1fa2" }, // Purple
+        { level: "Hazardous", max: 500, color: "#9e1e32" } // Maroon
     ];
 
     // Determine the AQI status and color
@@ -1692,11 +1755,11 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener('DOMContentLoaded', () => {
     const levels = [
         { level: "Good", max: 50, color: "#388e3c" },
-        { level: "Satisfactory", max: 100, color: "#ff9800" },
-        { level: "Moderate", max: 150, color: "#ff5722" },
-        { level: "Poor", max: 200, color: "#d32f2f" },
-        { level: "Very Poor", max: 300, color: "#7b1fa2" },
-        { level: "Severe", max: 500, color: "#9e1e32" }
+        { level: "Moderate", max: 100, color: "#ff9800" },
+        { level: "Unhealthy for Sensitive Groups", max: 150, color: "#ff5722" },
+        { level: "Unhealthy", max: 200, color: "#d32f2f" },
+        { level: "Very Unhealthy", max: 300, color: "#7b1fa2" },
+        { level: "Hazardous", max: 500, color: "#9e1e32" }
     ];
 
     function updateButtonStyles(aqi) {
@@ -1782,7 +1845,6 @@ document.addEventListener("DOMContentLoaded", () => {
         co: "Carbon monoxide reduces oxygen delivery in the body, causing headaches, dizziness, and potentially fatal poisoning in high levels.",
         o3: "Ozone exposure irritates airways, reduces lung function, and worsens asthma and other chronic respiratory diseases.",
         so2: "Sulfur dioxide inflames respiratory tract, triggers asthma attacks, and can cause long-term lung damage with prolonged exposure.",
-        ch4: "Methane is a potent greenhouse gas but direct health impacts are minimal; it can displace oxygen in confined spaces.",
         temp: "Extreme temperatures increase risk of heat exhaustion, heat stroke, dehydration, and can worsen cardiovascular and respiratory diseases.",
         humidity: "High humidity can worsen breathing difficulties, promote mold growth, and increase discomfort for people with asthma.",
         heatIndex: "Heat index measures combined effects of heat and humidity, indicating risk for heat-related illnesses including heat stroke."
@@ -1799,7 +1861,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Pollutants order for slideshow
-    const pollutants = ["pm25", "pm10", "co", "o3", "so2", "ch4", "temp", "humidity", "heatIndex"];
+    const pollutants = ["pm25", "pm10", "co", "o3", "so2", "temp", "humidity", "heatIndex"];
 
     let currentIndex = 0;
 
@@ -1841,7 +1903,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSlide();
 
     // Switch slide every 10 seconds
-    setInterval(updateSlide, 10000);
+    setInterval(updateSlide, 5000);
 });
 </script>
 
@@ -1862,7 +1924,7 @@ function updateSensorData() {
             document.getElementById('co_val').textContent = data.CO + ' ppm';
             document.getElementById('o3_val').textContent = data.O3 + ' ppb';
             document.getElementById('so2_val').textContent = so2 + ' ppb';
-            document.getElementById('ch4_val').textContent = data.CH4 + ' ppm';
+            document.getElementById('ch4_val').textContent = data.CH4 + ' °C';
             document.getElementById('temp_val').textContent = data.TEMP + '°C';
             document.getElementById('hum_val').textContent = data.HUM + '%';
 
@@ -1888,74 +1950,73 @@ function applyLevel(elementId, levelInfo) {
 }
 
 function getPM25Level(v) {
-    if (v <= 9) return { level: 'Good', color: 'green', key: "good" };
-    if (v <= 35.4) return { level: 'Moderate', color: 'yellow', key: "moderate" };
-    if (v <= 55.4) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
-    if (v <= 120.4) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
-    if (v <= 225.4) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
-    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
+    if (v <= 9) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 35.4) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 55.4) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 120.4) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 225.4) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getPM10Level(v) {
-    if (v <= 54) return { level: 'Good', color: 'green', key: "good" };
-    if (v <= 154) return { level: 'Moderate', color: 'yellow', key: "moderate" };
-    if (v <= 254) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
-    if (v <= 354) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
-    if (v <= 424) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
-    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
+    if (v <= 54) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 154) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 254) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 354) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 424) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getCOLevel(v) {
-    if (v <= 35) return { level: 'Good', color: 'green', key: "good" };
-    if (v <= 80) return { level: 'Moderate', color: 'yellow', key: "moderate" };
-    if (v <= 100) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
-    if (v <= 200) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
-    if (v <= 400) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
-    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
+    if (v <= 35) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 80) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 100) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 200) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 400) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getO3Level(v) {
-    if (v <= 54) return { level: 'Good', color: 'green', key: "good" };
-    if (v <= 124) return { level: 'Moderate', color: 'yellow', key: "moderate" };
-    if (v <= 164) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
-    if (v <= 204) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
-    if (v <= 404) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
-    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
+    if (v <= 54) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 124) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 164) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 204) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 404) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getSO2Level(v) {
-    if (v <= 35) return { level: 'Good', color: 'green', key: "good" };
-    if (v <= 75) return { level: 'Moderate', color: 'yellow', key: "moderate" };
-    if (v <= 185) return { level: 'Unhealthy for Sensitive Groups', color: 'orange', key: "usg" };
-    if (v <= 304) return { level: 'Unhealthy', color: 'red', key: "unhealthy" };
-    if (v <= 604) return { level: 'Very Unhealthy', color: 'purple', key: "veryUnhealthy" };
-    return { level: 'Hazardous', color: 'maroon', key: "hazardous" };
+    if (v <= 35) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 75) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 185) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 304) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 604) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
+}
+
+function getTempLevel(v) {
+    if (v <= 25) return { level: 'Cool', color: '#388e3c', key: 'cool'}; // slight semantic tweak
+    if (v <= 31) return { level: 'Good', color: '#388e3c', key: 'good' };
+    if (v <= 32) return { level: 'Warm', color: '#ff9800', key: 'warm' };
+    if (v <= 35) return { level: 'Hot', color: '#ff5722', key: 'hot' };
+    if (v <= 40) return { level: 'Very Hot', color: '#d32f2f', key: 'veryHot' };
+    return { level: 'Extreme Heat', color: '#9e1e32', key: 'extremeHeat' };
+}
+
+function getHumLevel(v) {
+    if (v <= 39) return { level: 'Too Dry', color: '#ff5722', key: 'tooDry' };
+    if (v <= 60) return { level: 'Optimal', color: '#388e3c', key: 'optimal' };
+    return { level: 'Too Humid', color: '#ff9800', key: 'tooHumid' };
 }
 
 function getCH4Level(v) {
-    if (v <= 100) return { level: 'Good', color: 'green' };
-    if (v <= 500) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 1000) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 5000) return { level: 'Unhealthy', color: 'red' };
-    return { level: 'Hazardous', color: 'purple' };
+    if (v >= 52) return { level: 'Danger', color: '#d32f2f', key: 'danger' };
+    if (v >= 42) return { level: 'Extreme Caution', color: '#ff5722', key: 'extremeCaution' };
+    if (v >= 33) return { level: 'Caution', color: '#ff9800', key: 'caution' };
+    if (v > 0)    return { level: 'Good', color: '#388e3c', key: 'good' };
+    return { level: 'Extreme Danger', color: '#9e1e32', key: 'extremeDanger' };
 }
 
-// Temperature Level Function
-function getTempLevel(v) {
-    if (v <= 25) return { level: 'Good', color: 'green' };
-    if (v <= 31) return { level: 'Good', color: 'lightblue' };
-    if (v <= 32) return { level: 'Warm', color: 'yellow' };
-    if (v <= 35) return { level: 'Hot', color: 'orange' };
-    if (v <= 40) return { level: 'Very Hot', color: 'red' };
-    return { level: 'Extreme Heat', color: 'darkred' };
-}
-
-// Humidity Level Function
-function getHumLevel(v) {
-    if (v <= 39) return { level: 'Too Dry', color: 'brown' };
-    if (v <= 60) return { level: 'Optimal', color: 'green' };
-    return { level: 'Too Humid', color: 'green' };
-}
 
 // Start once and repeat every 5 seconds
 updateSensorData();
