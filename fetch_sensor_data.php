@@ -1,5 +1,5 @@
 <?php
-$api_url = 'all_data_log_api.php'; // Or full URL if hosted elsewhere
+$api_url = 'https://air-quality-php-backend.onrender.com/all_data_log_api.php'; // Or full URL if hosted elsewhere
 
 // Fetch data from API
 $response = file_get_contents($api_url);
