@@ -95,39 +95,46 @@ void loop() {
 
 // Send data to server
 // Send data to server
+#include <WiFiClientSecure.h>
+
 void sendToServer(const String& rawPayload) {
-if (WiFi.status() == WL_CONNECTED) {
-WiFiClient client;
-HTTPClient http;
+  if (WiFi.status() == WL_CONNECTED) {
+    WiFiClientSecure client;
+    client.setInsecure();  // For HTTPS without cert verification
 
+    HTTPClient http;
     http.begin(client, serverUrl);
-http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-// Wrap the raw data string in a POST variable called "data"
-String postData = "data=" + rawPayload;  // no need to URL encode, PHP's parse_str handles it
+    // Encode the payload (TEMP=...&HUM=...&CH4=...)
+    String encodedPayload = urlEncode(rawPayload);
 
-Serial.print("📡 Sending POST data: ");
-Serial.println(postData);
+    // Wrap it inside `data=...`
+    String postData = "data=" + encodedPayload;
 
-int httpResponseCode = http.POST(postData);
+    Serial.print("📡 Sending POST data: ");
+    Serial.println(postData);
 
-if (httpResponseCode > 0) {
-  Serial.print("✅ Response Code: ");
-  Serial.println(httpResponseCode);
-  String response = http.getString();
-  Serial.println("📨 Server Response:");
-  Serial.println(response);
-} else {
-  Serial.print("❌ POST Failed. HTTP Code: ");
-  Serial.println(httpResponseCode);
-}
+    int httpResponseCode = http.POST(postData);
 
-http.end();
+    if (httpResponseCode > 0) {
+      Serial.print("✅ Response Code: ");
+      Serial.println(httpResponseCode);
+      String response = http.getString();
+      Serial.println("📨 Server Response:");
+      Serial.println(response);
+    } else {
+      Serial.print("❌ POST Failed. HTTP Code: ");
+      Serial.println(httpResponseCode);
+    }
 
+    http.end();
   } else {
-Serial.println("⚠️ Not connected to Wi-Fi.");
+    Serial.println("⚠️ Not connected to Wi-Fi.");
+  }
 }
-}
+
+
 
 
 
