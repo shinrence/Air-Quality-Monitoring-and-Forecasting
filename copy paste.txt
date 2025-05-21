@@ -7,3 +7,5 @@ git push
 
 
 cd C:\xampp1\htdocs\thesiss
+
+cd C:\xampp1\htdocs\thesiss\air_quality_ml
