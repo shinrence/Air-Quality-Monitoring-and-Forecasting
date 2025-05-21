@@ -13,11 +13,18 @@ try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Select all data ordered by timestamp descending (latest first)
-    $stmt = $pdo->query("SELECT * FROM sensor_data ORDER BY timestamp DESC");
+    // Select all data ordered by timestamp descending (latest first),
+    // and add 8 hours to timestamp as adjusted_timestamp
+    $stmt = $pdo->query("SELECT sensor_data.*, (timestamp + INTERVAL '8 hours') AS adjusted_timestamp FROM sensor_data ORDER BY timestamp DESC");
     $allData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($allData) {
+        foreach ($allData as &$row) {
+            if (isset($row['adjusted_timestamp'])) {
+                $row['timestamp'] = $row['adjusted_timestamp'];
+                unset($row['adjusted_timestamp']);
+            }
+        }
         echo json_encode($allData);
     } else {
         echo json_encode(["error" => "No data found"]);
@@ -27,3 +34,4 @@ try {
     echo json_encode(["error" => "DB Error: " . $e->getMessage()]);
 }
 ?>
+
