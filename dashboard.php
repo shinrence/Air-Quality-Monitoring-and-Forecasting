@@ -1120,7 +1120,8 @@ async function updateCautionaryStatement() {
     try {
         const response = await fetch('latest_data_api.php');
         const data = await response.json();
-        const aqi = parseInt(data.AQI);
+        const aqi = parseInt(data.aqi_total);
+
         
 
         const levels = [
@@ -1343,14 +1344,14 @@ async function updateDashboardFromAPI() {
         const data = await res.json();
 
         const pollutants = {
-            pm25: { val: parseFloat(data.PM25), getLevel: getPM25Level },
-            pm10: { val: parseFloat(data.PM10), getLevel: getPM10Level },
-            co: { val: parseFloat(data.CO), getLevel: getCOLevel },
-            o3: { val: parseFloat(data.O3), getLevel: getO3Level },
-            so2: { val: parseFloat(data.H2), getLevel: getSO2Level },
-            ch4: { val: parseFloat(data.CH4), getLevel: getCH4Level },
-            temp: { val: parseFloat(data.TEMP), getLevel: getTempLevel },
-            hum: { val: parseFloat(data.HUM), getLevel: getHumLevel },
+            pm25: { val: parseFloat(data.pm25), getLevel: getPM25Level },
+            pm10: { val: parseFloat(data.pm10), getLevel: getPM10Level },
+            co: { val: parseFloat(data.co), getLevel: getCOLevel },
+            o3: { val: parseFloat(data.o3), getLevel: getO3Level },
+            so2: { val: parseFloat(data.h2), getLevel: getSO2Level }, // note lowercase 'h2'
+            ch4: { val: parseFloat(data.ch4), getLevel: getCH4Level },
+            temp: { val: parseFloat(data.temp), getLevel: getTempLevel },
+            hum: { val: parseFloat(data.hum), getLevel: getHumLevel },
         };
 
         for (const key in pollutants) {
@@ -1368,22 +1369,20 @@ async function updateDashboardFromAPI() {
 
             // Update info icon to match level color
             // Show/hide info icon based on level category
-const visibleLevels = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous',
-    'warm', 'hot', 'veryHot', 'extremeHeat',
-    'tooDry', 'tooHumid',
-    'caution', 'extremeCaution', 'danger', 'extremeDanger'];
+            const visibleLevels = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous',
+                'warm', 'hot', 'veryHot', 'extremeHeat',
+                'tooDry', 'tooHumid',
+                'caution', 'extremeCaution', 'danger', 'extremeDanger'];
 
-if (infoEl) {
-    infoEl.style.backgroundColor = level.color;
+            if (infoEl) {
+                infoEl.style.backgroundColor = level.color;
 
-    // Show or hide based on level
-    if (visibleLevels.includes(level.key)) {
-        infoEl.style.display = 'block';
-    } else {
-        infoEl.style.display = 'none';
-    }
-}
-
+                if (visibleLevels.includes(level.key)) {
+                    infoEl.style.display = 'block';
+                } else {
+                    infoEl.style.display = 'none';
+                }
+            }
 
             // Update value text
             const valEl = document.getElementById(`${key}_val`);
@@ -1404,6 +1403,7 @@ if (infoEl) {
         console.error('Failed to load air quality data:', err);
     }
 }
+
 
 // Sign icons for each AQI level
 const levelSigns = {
@@ -1552,7 +1552,7 @@ function updateAQICircle(aqi) {
     let statusText = document.getElementById("aqiStatusText");
 
     // AQI levels and colors
-    let aqiLevels = [
+    const aqiLevels = [
         { level: "Good", max: 50, color: "#388e3c" }, // Green
         { level: "Moderate", max: 100, color: "#ff9800" }, // Yellow
         { level: "Unhealthy for Sensitive Groups", max: 150, color: "#ff5722" }, // Orange
@@ -1561,12 +1561,15 @@ function updateAQICircle(aqi) {
         { level: "Hazardous", max: 500, color: "#9e1e32" } // Maroon
     ];
 
+    // Ensure aqi is number
+    aqi = Number(aqi);
+
     // Determine the AQI status and color
-    let selectedLevel = aqiLevels.find(level => aqi <= level.max) || aqiLevels[aqiLevels.length - 1];
+    const selectedLevel = aqiLevels.find(level => aqi <= level.max) || aqiLevels[aqiLevels.length - 1];
 
     // Set full circle color
     circle.style.stroke = selectedLevel.color;
-    circle.style.strokeDasharray = "282.6"; // Full circle
+    circle.style.strokeDasharray = "282.6"; // Full circle circumference
     circle.style.strokeDashoffset = "0"; // No offset
 
     // Update AQI Value
@@ -1583,9 +1586,10 @@ function fetchAndUpdateAQI() {
         .then(data => {
             if (data.error) {
                 console.error('Error fetching AQI data:', data.error);
+            } else if (data.aqi_total !== undefined && !isNaN(data.aqi_total)) {
+                updateAQICircle(data.aqi_total);
             } else {
-                let aqi = data.AQI;  // Assuming 'AQI' is the field in the JSON
-                updateAQICircle(aqi);
+                console.warn('AQI total not found or invalid in API response');
             }
         })
         .catch(error => {
@@ -1640,13 +1644,14 @@ function fetchAndUpdateMainPollutant() {
                 return;
             }
 
+            // Use lowercase keys from API response
             const pollutants = {
-                "PM2.5": data.AQI_PM25,
-                "PM10": data.AQI_PM10,
-                "CO": data.AQI_CO,
-                "O3": data.AQI_O3,
-                "SO2": data.AQI_SO2,
-                "CH4": data.AQI_CH4
+                "PM2.5": data.aqi_pm25,
+                "PM10": data.aqi_pm10,
+                "CO": data.aqi_co,
+                "O3": data.aqi_o3,
+                "SO2": data.aqi_so2,
+                // "CH4": data.aqi_ch4 // Not available in your API response
             };
 
             updateMainPollutantDisplay(pollutants);
@@ -1660,6 +1665,7 @@ function fetchAndUpdateMainPollutant() {
 fetchAndUpdateMainPollutant();
 setInterval(fetchAndUpdateMainPollutant, 5000);
 </script>
+
 
 
 
@@ -1811,9 +1817,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('latest_data_api.php')
             .then(res => res.json())
             .then(data => {
-                const aqi = parseInt(data.AQI);
+                const aqi = parseInt(data.aqi_total);
                 if (!isNaN(aqi)) {
                     updateButtonStyles(aqi);
+                } else {
+                    console.warn('aqi_total not found or invalid in API response');
                 }
             })
             .catch(err => console.error('Failed to fetch AQI:', err));
@@ -1842,6 +1850,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchAQIandUpdate, 5000);  // Repeat every 5 seconds
 });
 </script>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -1879,42 +1888,43 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch('latest_data_api.php')
             .then(res => res.json())
             .then(data => {
-                // Use overall AQI if available, fallback to PM2.5 AQI for example
-                // Assuming your API returns an overall AQI as "AQI" or you can compute max AQI here
-                let overallAQI = data.AQI || Math.max(
-                    data.AQI_PM25 || 0,
-                    data.AQI_PM10 || 0,
-                    data.AQI_CO || 0,
-                    data.AQI_O3 || 0,
-                    data.AQI_SO2 || 0
+                // Use overall AQI from aqi_total or compute max of individual pollutants
+                const overallAQI = data.aqi_total || Math.max(
+                    data.aqi_pm25 || 0,
+                    data.aqi_pm10 || 0,
+                    data.aqi_co || 0,
+                    data.aqi_o3 || 0,
+                    data.aqi_so2 || 0
                 );
 
                 // Update background color
                 container.style.backgroundColor = getAQIColor(overallAQI);
 
-                // Update text content
+                // Get current pollutant key
                 const pollutantKey = pollutants[currentIndex];
+
+                // Show health message or fallback
                 container.textContent = healthMessages[pollutantKey] || "No data available.";
 
-                // Move to next slide index (loop back)
+                // Advance index looping
                 currentIndex = (currentIndex + 1) % pollutants.length;
             })
             .catch(() => {
-                // On fetch error fallback:
-                container.style.backgroundColor = "#388e3c"; // Good - Green
+                container.style.backgroundColor = "#388e3c"; // Good - Green fallback
                 const pollutantKey = pollutants[currentIndex];
                 container.textContent = healthMessages[pollutantKey] || "No data available.";
                 currentIndex = (currentIndex + 1) % pollutants.length;
             });
     }
 
-    // Initialize first slide
+    // Initial call
     updateSlide();
 
-    // Switch slide every 10 seconds
-    setInterval(updateSlide, 5000);
+    // Switch slide every 10 seconds (matching your comment)
+    setInterval(updateSlide, 10000);
 });
 </script>
+
 
 <script>
 function updateSensorData() {
