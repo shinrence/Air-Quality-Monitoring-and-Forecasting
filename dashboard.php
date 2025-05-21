@@ -906,7 +906,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const pollutantData = {};
     const timeLabels = [];
 
-    // Fetch sensor trend data
     fetch('fetch_sensor_data.php')
         .then(response => response.json())
         .then(data => {
@@ -917,7 +916,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 co:   "CO (ppm)",
                 o3:   "O₃ (ppb)",
                 so2:  "SO₂ (ppb)",
-                ch4:  "",
+                ch4:  "CH₄ (ppm)",
                 temp: "Temperature (°C)",
                 hum:  "Humidity (%)",
                 aqi:  "Air Quality Index"
@@ -929,7 +928,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 o3: 5,
                 so2: 10,
                 ch4: 50,
-                temp: 40,
+                temp: 50,
                 hum: 100,
                 aqi: 500
             };
@@ -949,33 +948,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 pollutantData.ch4.data.push(parseFloat(entry.avg_ch4));
                 pollutantData.temp.data.push(parseFloat(entry.avg_temp));
                 pollutantData.hum.data.push(parseFloat(entry.avg_hum));
-                pollutantData.aqi.data.push(parseFloat(entry.avg_aqi ?? entry.AQI));
-
+                pollutantData.aqi.data.push(parseFloat(entry.avg_aqi));
             });
 
-            // Fetch latest AQI data to determine initial pollutant
+            // Fetch latest AQI data
             fetch('latest_data_api.php')
                 .then(response => response.json())
                 .then(latest => {
                     const aqiKeys = {
-    aqi_pm25: "pm25",
-    aqi_pm10: "pm10",
-    aqi_co: "co",
-    aqi_o3: "o3",
-    aqi_so2: "so2"
-};
-
-for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
-    const value = parseFloat(latest[aqiKey.toLowerCase()]);
-    if (!isNaN(value) && value > maxAQI) {
-        maxAQI = value;
-        defaultPollutant = pollutantKey;
-    }
-}
-
+                        aqi_pm25: "pm25",
+                        aqi_pm10: "pm10",
+                        aqi_co: "co",
+                        aqi_o3: "o3",
+                        aqi_so2: "so2"
+                    };
 
                     let maxAQI = -1;
-                    let defaultPollutant = "pm25"; // fallback
+                    let defaultPollutant = "pm25";
 
                     for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
                         const value = parseFloat(latest[aqiKey]);
@@ -985,13 +974,10 @@ for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
                         }
                     }
 
-                    // Set default select option
                     document.getElementById("pollutantSelect").value = defaultPollutant;
 
-                    // Draw chart
                     let chart = createChart(defaultPollutant);
 
-                    // Update on selection change
                     document.getElementById("pollutantSelect").addEventListener("change", function () {
                         const selected = this.value;
                         chart.destroy();
@@ -1003,13 +989,13 @@ for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
             console.error("Error loading sensor data:", error);
         });
 
-    function getAQIColor(avgValue) {
+    function getAQIColor(value) {
         for (const level of aqiLevels) {
-            if (avgValue <= level.max) {
+            if (value <= level.max) {
                 return level.color;
             }
         }
-        return "#9e1e32";
+        return "#9e1e32"; // default to hazardous
     }
 
     function calculateAverage(dataArray) {
@@ -1089,6 +1075,7 @@ for (const [aqiKey, pollutantKey] of Object.entries(aqiKeys)) {
     }
 });
 </script>
+
 
 
 </div>
