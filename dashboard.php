@@ -1917,31 +1917,32 @@ function updateSensorData() {
                 return;
             }
 
-            const so2 = data.H2;
+            const so2 = data.h2; // "h2" is used as SO2
 
-            document.getElementById('pm25_val').textContent = data.PM25 + ' µg/m³';
-            document.getElementById('pm10_val').textContent = data.PM10 + ' µg/m³';
-            document.getElementById('co_val').textContent = data.CO + ' ppm';
-            document.getElementById('o3_val').textContent = data.O3 + ' ppb';
+            document.getElementById('pm25_val').textContent = data.pm25 + ' µg/m³';
+            document.getElementById('pm10_val').textContent = data.pm10 + ' µg/m³';
+            document.getElementById('co_val').textContent = data.co + ' ppm';
+            document.getElementById('o3_val').textContent = data.o3 + ' ppb';
             document.getElementById('so2_val').textContent = so2 + ' ppb';
-            document.getElementById('ch4_val').textContent = data.CH4 + ' °C';
-            document.getElementById('temp_val').textContent = data.TEMP + '°C';
-            document.getElementById('hum_val').textContent = data.HUM + '%';
+            document.getElementById('ch4_val').textContent = data.ch4 + ' ppm'; // Changed °C to ppm for methane
+            document.getElementById('temp_val').textContent = data.temp + '°C';
+            document.getElementById('hum_val').textContent = data.hum + '%';
 
-            applyLevel('pm25_level', getPM25Level(data.PM25));
-            applyLevel('pm10_level', getPM10Level(data.PM10));
-            applyLevel('co_level', getCOLevel(data.CO));
-            applyLevel('o3_level', getO3Level(data.O3));
+            applyLevel('pm25_level', getPM25Level(data.pm25));
+            applyLevel('pm10_level', getPM10Level(data.pm10));
+            applyLevel('co_level', getCOLevel(data.co));
+            applyLevel('o3_level', getO3Level(data.o3));
             applyLevel('so2_level', getSO2Level(so2));
-            applyLevel('ch4_level', getCH4Level(data.CH4));
+            applyLevel('ch4_level', getCH4Level(data.ch4));
 
-            applyLevel('temp_level', getTempLevel(data.TEMP));
-            applyLevel('hum_level', getHumLevel(data.HUM));
+            applyLevel('temp_level', getTempLevel(data.temp));
+            applyLevel('hum_level', getHumLevel(data.hum));
         })
         .catch(error => {
             console.error('Fetch error:', error);
         });
 }
+
 
 function applyLevel(elementId, levelInfo) {
     const el = document.getElementById(elementId);
