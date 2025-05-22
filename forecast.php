@@ -390,73 +390,71 @@ function getAQILevel(v) {
 
 // Threshold Functions
 function getPM25Level(v) {
-    if (v <= 9) return { level: 'Good', color: 'green' };
-    if (v <= 35.4) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 55.4) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 120.4) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 225.4) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 9) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 35.4) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 55.4) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 120.4) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 225.4) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getPM10Level(v) {
-    if (v <= 54) return { level: 'Good', color: 'green' };
-    if (v <= 154) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 254) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 354) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 424) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 54) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 154) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 254) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 354) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 424) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getCOLevel(v) {
-    if (v <= 35) return { level: 'Good', color: 'green' };
-    if (v <= 50) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 69) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 89) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 109) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 35) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 80) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 100) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 200) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 400) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getO3Level(v) {
-    if (v <= 0.074) return { level: 'Good', color: 'green' };
-    if (v <= 0.124) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 0.164) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 0.204) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 0.404) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 54) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 124) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 164) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 204) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 404) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
 }
 
 function getSO2Level(v) {
-    if (v <= 35) return { level: 'Good', color: 'green' };
-    if (v <= 75) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 185) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 304) return { level: 'Unhealthy', color: 'red' };
-    if (v <= 604) return { level: 'Unhealthy', color: 'purple' };
-    return { level: 'Hazardous', color: 'maroon' };
+    if (v <= 35) return { level: 'Good', color: '#388e3c', key: "good" };
+    if (v <= 75) return { level: 'Moderate', color: '#ff9800', key: "moderate" };
+    if (v <= 185) return { level: 'Unhealthy for Sensitive Groups', color: '#ff5722', key: "usg" };
+    if (v <= 304) return { level: 'Unhealthy', color: '#d32f2f', key: "unhealthy" };
+    if (v <= 604) return { level: 'Very Unhealthy', color: '#7b1fa2', key: "veryUnhealthy" };
+    return { level: 'Hazardous', color: '#9e1e32', key: "hazardous" };
+}
+
+function getTempLevel(v) {
+    if (v <= 25) return { level: 'Cool', color: '#388e3c', key: 'cool'}; // slight semantic tweak
+    if (v <= 31) return { level: 'Good', color: '#388e3c', key: 'good' };
+    if (v <= 32) return { level: 'Warm', color: '#ff9800', key: 'warm' };
+    if (v <= 35) return { level: 'Hot', color: '#ff5722', key: 'hot' };
+    if (v <= 40) return { level: 'Very Hot', color: '#d32f2f', key: 'veryHot' };
+    return { level: 'Extreme Heat', color: '#9e1e32', key: 'extremeHeat' };
+}
+
+function getHumLevel(v) {
+    if (v <= 39) return { level: 'Too Dry', color: '#ff5722', key: 'tooDry' };
+    if (v <= 60) return { level: 'Optimal', color: '#388e3c', key: 'optimal' };
+    return { level: 'Too Humid', color: '#ff9800', key: 'tooHumid' };
 }
 
 function getCH4Level(v) {
-    if (v <= 50) return { level: 'Good', color: 'green' };
-    if (v <= 100) return { level: 'Moderate', color: 'yellow' };
-    if (v <= 200) return { level: 'Unhealthy', color: 'orange' };
-    if (v <= 400) return { level: 'Unhealthy', color: 'red' };
-    return { level: 'Hazardous', color: 'purple' };
-}
-
-// Temperature Level Function
-function getTempLevel(v) {
-    if (v <= 25) return { level: 'Cool', color: 'blue' };
-    if (v <= 31) return { level: 'Good', color: 'lightblue' };
-    if (v <= 32) return { level: 'Warm', color: 'yellow' };
-    if (v <= 35) return { level: 'Hot', color: 'orange' };
-    if (v <= 40) return { level: 'Very Hot', color: 'red' };
-    return { level: 'Extreme Heat', color: 'darkred' };
-}
-
-// Humidity Level Function
-function getHumLevel(v) {
-    if (v <= 39) return { level: 'Too Dry', color: 'brown' };
-    if (v <= 60) return { level: 'Optimal', color: 'green' };
-    return { level: 'Too Humid', color: 'purple' };
+    if (v >= 52) return { level: 'Danger', color: '#d32f2f', key: 'danger' };
+    if (v >= 42) return { level: 'Extreme Caution', color: '#ff5722', key: 'extremeCaution' };
+    if (v >= 33) return { level: 'Caution', color: '#ff9800', key: 'caution' };
+    if (v > 0)    return { level: 'Good', color: '#388e3c', key: 'good' };
+    return { level: 'Extreme Danger', color: '#9e1e32', key: 'extremeDanger' };
 }
 
 // Start once and repeat every 5 seconds
