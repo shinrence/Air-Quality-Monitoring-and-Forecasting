@@ -137,7 +137,7 @@ table ul {
 </head>
 <body>
   <header>
-    <h1>Air Quality Index Forecasting</h1>
+    <h1>Air Quality Index Details</h1>
     <nav>
       <ul>
         <li><a href="index.php">Home</a></li>

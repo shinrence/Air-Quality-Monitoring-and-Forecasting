@@ -252,7 +252,7 @@ th, td {
           <th style="border: 1px solid #444; padding: 10px;">CO</th>
           <th style="border: 1px solid #444; padding: 10px;">O₃</th>
           <th style="border: 1px solid #444; padding: 10px;">SO₂</th>
-          <th style="border: 1px solid #444; padding: 10px;">CH₄</th>
+          <th style="border: 1px solid #444; padding: 10px;">Heat Index</th>
           <th style="border: 1px solid #444; padding: 10px;">Temp</th>
           <th style="border: 1px solid #444; padding: 10px;">Humidity</th>
           <th style="border: 1px solid #444; padding: 10px;">AQI</th>

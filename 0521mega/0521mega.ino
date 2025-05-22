@@ -136,7 +136,7 @@ void readPMS() {
 
 
 float calibrateCO(int analogValue) {
-  float value = analogValue - 330;
+  float value = analogValue - 250;
   return (value <= 0) ? 0.01 : value;
 }
 
@@ -146,7 +146,7 @@ float calibrateCH4(int analogValue) {
 }
 
 float calibrateSO2(int analogValue) {
-  float value = analogValue - 240;
+  float value = analogValue - 90;
   return (value <= 0) ? 0.01 : value;
 }
 
