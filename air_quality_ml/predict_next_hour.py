@@ -101,7 +101,6 @@ def send_predictions_to_api(predictions, api_url):
     except Exception as e:
         print(f"❌ Exception sending predictions: {e}")
 
-
 def main():
     models = load_models()
     last_1h_run = None
