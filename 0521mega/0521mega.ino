@@ -118,7 +118,7 @@ void readPMS() {
         }
       }
 
-      if (pm2_5_val > 3000 || pm10_val > 3000) {
+      if (pm2_5_val > 1000 || pm10_val > 1000) {
         pm2_5_val = 5;
         pm10_val = 7;
       }
