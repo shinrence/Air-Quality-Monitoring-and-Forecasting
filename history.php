@@ -213,53 +213,83 @@
     });
 
     function groupHourlyAverages() {
-      const relevantData = allData.filter(entry => entry.timestamp.startsWith(selectedDate));
-      const hourlyGrouped = {};
+  const relevantData = allData.filter(entry => entry.timestamp.startsWith(selectedDate));
+  const hourlyGrouped = {};
 
-      relevantData.forEach(entry => {
-        const hour = entry.timestamp.split(' ')[1].split(':')[0];
-        const pollutantKey = selectedPollutant.toLowerCase(); // match JSON keys
-        const value = parseFloat(entry[pollutantKey]);
+  relevantData.forEach(entry => {
+    const hour = entry.timestamp.split(' ')[1].split(':')[0];
+    const pollutantKey = selectedPollutant.toLowerCase();
+    const value = parseFloat(entry[pollutantKey]);
 
+    // Determine matching AQI field
+    let aqiKey = '';
+    if (pollutantKey === 'pm25') aqiKey = 'aqi_pm25';
+    else if (pollutantKey === 'pm10') aqiKey = 'aqi_pm10';
+    else if (pollutantKey === 'co') aqiKey = 'aqi_co';
+    else if (pollutantKey === 'so2' || pollutantKey === 'h2') aqiKey = 'aqi_so2';
+    else if (pollutantKey === 'o3') aqiKey = 'aqi_o3';
+    else if (pollutantKey === 'aqi_total') aqiKey = 'aqi_total';
 
-        if (!isNaN(value)) {
-          if (!hourlyGrouped[hour]) hourlyGrouped[hour] = [];
-          hourlyGrouped[hour].push(value);
-        }
-      });
+    const aqiVal = parseFloat(entry[aqiKey]);
 
-      return Object.entries(hourlyGrouped).map(([hour, values]) => {
-        const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
-        return { hour: hour, avg: avg };
-        
-      }).sort((a, b) => a.hour - b.hour);
+    if (!isNaN(value)) {
+      if (!hourlyGrouped[hour]) hourlyGrouped[hour] = { values: [], aqiValues: [] };
+      hourlyGrouped[hour].values.push(value);
+      if (!isNaN(aqiVal)) hourlyGrouped[hour].aqiValues.push(aqiVal);
     }
+  });
+
+  return Object.entries(hourlyGrouped).map(([hour, data]) => {
+    const avg = (data.values.reduce((a, b) => a + b, 0) / data.values.length).toFixed(2);
+    const aqiAvg = data.aqiValues.length > 0 ? 
+      (data.aqiValues.reduce((a, b) => a + b, 0) / data.aqiValues.length).toFixed(2) : "N/A";
+    return { hour, avg, aqiAvg };
+  }).sort((a, b) => a.hour - b.hour);
+}
+
+function getAQIColor(aqi) {
+  if (aqi <= 50) return "#388e3c";       // Good - Green
+  if (aqi <= 100) return "#ff9800";      // Satisfactory - Yellow
+  if (aqi <= 150) return "#ff5722";      // Moderate - Orange
+  if (aqi <= 200) return "#d32f2f";      // Poor - Red
+  if (aqi <= 300) return "#7b1fa2";      // Very Poor - Purple
+  return "#9e1e32";                      // Severe - Maroon
+}
+
 
     function showTable() {
-      const rows = groupHourlyAverages().map(entry => {
-        return `<tr><td>${formatHour(entry.hour, true)}</td><td>${entry.avg}</td></tr>`;
+  const rows = groupHourlyAverages().map(entry => {
+    const aqiText = entry.aqiAvg === "N/A" ? "N/A" : `${entry.aqiAvg}`;
+    const color = entry.aqiAvg === "N/A" ? "#999" : getAQIColor(entry.aqiAvg);
 
+    return `
+      <tr>
+        <td>${formatHour(entry.hour, true)}</td>
+        <td>${entry.avg}</td>
+        <td style="color:${color}; font-weight:bold">${aqiText}</td>
+      </tr>`;
+  });
 
-      });
+  dataDisplay.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Hour</th>
+          <th>Avg Value</th>
+          <th>Avg AQI</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.join('')}
+      </tbody>
+    </table>
+  `;
 
-      dataDisplay.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Hour</th>
-              <th>Average ${selectedPollutant}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.join('')}
-          </tbody>
-        </table>
-      `;
+  toggleBtn.textContent = 'View Chart';
+  toggleBtn.style.display = 'inline-block';
+  currentView = 'table';
+}
 
-      toggleBtn.textContent = 'View Chart';
-      toggleBtn.style.display = 'inline-block';
-      currentView = 'table';
-    }
 
     function showChart() {
       const data = groupHourlyAverages();
@@ -274,7 +304,7 @@
         data: {
           labels: labels,
           datasets: [{
-            label: `Average ${selectedPollutant}`,
+            label: `Average`,
             data: values,
             borderColor: '#ffcc00',
             backgroundColor: 'rgba(255,204,0,0.2)',

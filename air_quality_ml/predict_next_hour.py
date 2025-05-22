@@ -33,10 +33,10 @@ def read_latest_data():
     except Exception as e:
         raise RuntimeError(f"Failed to fetch or parse API data: {e}")
 
-    if len(records) < 1200:
+    if len(records) < 360:
         raise ValueError("Not enough data. At least 1200 entries are required.")
 
-    recent_records = records[-1200:]
+    recent_records = records[-360:]
     values = {p: [] for p in targets}
 
     for record in recent_records:

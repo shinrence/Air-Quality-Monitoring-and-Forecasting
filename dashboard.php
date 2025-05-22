@@ -916,7 +916,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 co:   "CO (ppm)",
                 o3:   "O₃ (ppb)",
                 so2:  "SO₂ (ppb)",
-                ch4:  "CH₄ (ppm)",
+                ch4:  "Heat Index (°C",
                 temp: "Temperature (°C)",
                 hum:  "Humidity (%)",
                 aqi:  "Air Quality Index"
@@ -924,8 +924,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const maxValues = {
                 pm25: 301,
                 pm10: 301,
-                co: 50,
-                o3: 5,
+                co: 100,
+                o3: 50,
                 so2: 10,
                 ch4: 50,
                 temp: 50,
@@ -1930,7 +1930,7 @@ function updateSensorData() {
             document.getElementById('co_val').textContent = data.co + ' ppm';
             document.getElementById('o3_val').textContent = data.o3 + ' ppb';
             document.getElementById('so2_val').textContent = so2 + ' ppb';
-            document.getElementById('ch4_val').textContent = data.ch4 + ' °C'; // Changed °C to ppm for methane
+            document.getElementById('ch4_val').textContent = data.ch4 + ' °C';
             document.getElementById('temp_val').textContent = data.temp + '°C';
             document.getElementById('hum_val').textContent = data.hum + '%';
 

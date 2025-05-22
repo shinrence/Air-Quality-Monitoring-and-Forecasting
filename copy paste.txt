@@ -1,11 +1,19 @@
+cd C:\xampp1\htdocs\thesiss
 
+git lfs untrack "*.joblib"
+
+git rm --cached air_quality_ml/models/*_predictor.joblib
+
+echo "air_quality_ml/models/*_predictor.joblib" >> .gitignore
+
+git add .gitattributes .gitignore
+git commit -m "Remove .joblib models from Git and LFS, add to .gitignore"
+git push
 
 
 git add .
 git commit -m "Your commit message"
 git push
 
-
-cd C:\xampp1\htdocs\thesiss
 
 cd C:\xampp1\htdocs\thesiss\air_quality_ml

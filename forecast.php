@@ -324,7 +324,7 @@ function updateSensorData() {
                                           (key === 'pm10') ? `${val} µg/m³` :
                                           (key === 'co') ? `${val} ppm` :
                                           (key === 'so2') ? `${val} ppb` :
-                                          (key === 'ch4') ? `${val} ppm` :
+                                          (key === 'ch4') ? `${val} °C` :
                                           (key === 'aqi') ? val.toFixed(2) :
                                           `${val}`;
 

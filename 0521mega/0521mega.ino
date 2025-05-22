@@ -104,9 +104,12 @@ void readPMS() {
       }
 
       pm1_0_val = (buf[10] << 8) | buf[11];
-      pm2_5_val = ((buf[12] << 8) | buf[13]) / 4;  // divide by 4 here
-      pm10_val  = ((buf[14] << 8) | buf[15]) / 4;  // divide by 4 here
 
+      uint16_t raw_pm2_5 = (buf[12] << 8) | buf[13];
+      uint16_t raw_pm10  = (buf[14] << 8) | buf[15];
+
+      pm2_5_val = (raw_pm2_5 >= 12) ? raw_pm2_5 / 4 : raw_pm2_5;
+      pm10_val  = (raw_pm10  >= 12) ? raw_pm10  / 4 : raw_pm10;
 
       // --- Conditional override for abnormal PMS values ---
       int checkVals[] = {66, 256, 512, 768, 1024, 1280, 1536};
@@ -129,6 +132,7 @@ void readPMS() {
 
   while (PMS_SERIAL.available()) PMS_SERIAL.read();
 }
+
 
 
 float calibrateCO(int analogValue) {
