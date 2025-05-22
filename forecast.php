@@ -275,34 +275,25 @@ th, td {
 
 <script>
 function updateSensorData() {
-    fetch('forecast_data_api.php') 
-        .then(response => response.text())
-        .then(text => {
-            const blocks = text.trim().split('----').map(block => block.trim()).filter(b => b);
-            const latestBlocks = blocks.slice(-8); // Get the latest 8 blocks only
+    fetch('forecast_data_api.php')
+        .then(response => response.json())
+        .then(data => {
+            const latestBlocks = data.slice(-8); // Get the latest 8 blocks only
 
             // Update the timestamp to reflect the range
-            const firstTimestamp = latestBlocks[0].match(/Timestamp:\s*(.+)/)[1];
-            const lastTimestamp = latestBlocks[latestBlocks.length - 1].match(/Timestamp:\s*(.+)/)[1];
+            const firstTimestamp = latestBlocks[0].timestamp;
+            const lastTimestamp = latestBlocks[latestBlocks.length - 1].timestamp;
             document.getElementById('timestamp').textContent = `8-Hour Air Quality Forecast: ${firstTimestamp} - ${lastTimestamp}`;
 
             const tbody = document.querySelector('.aqi-prediction-container tbody');
             tbody.innerHTML = ''; // Clear previous rows
 
-            latestBlocks.forEach(block => {
-                const lines = block.split('\n').map(line => line.trim());
-                const data = {};
+            latestBlocks.forEach(item => {
+                const hour = item.hour_range;
+                const values = item.values;
 
-                lines.forEach(line => {
-                    if (line.startsWith('Timestamp:')) {
-                        data.timestamp = line.replace('Timestamp:', '').trim();
-                    } else if (line.startsWith('Hour:')) {
-                        data.hour = line.replace('Hour:', '').trim();
-                    } else if (line.includes(':')) {
-                        const [key, value] = line.split(':').map(s => s.trim());
-                        data[key.toLowerCase()] = parseFloat(value);
-                    }
-                });
+                // Map h2 to so2
+                values.so2 = values.h2;
 
                 const pollutants = ['pm25', 'pm10', 'co', 'o3', 'so2', 'ch4', 'temp', 'hum', 'aqi'];
 
@@ -313,7 +304,7 @@ function updateSensorData() {
                 levelRow.style.backgroundColor = '#000000';
 
                 const hourCell = document.createElement('td');
-                hourCell.textContent = data.hour;
+                hourCell.textContent = hour;
                 hourCell.setAttribute('rowspan', '2');
                 hourCell.style.border = '1px solid #444';
                 hourCell.style.padding = '10px';
@@ -322,7 +313,7 @@ function updateSensorData() {
                 valueRow.appendChild(hourCell);
 
                 pollutants.forEach(key => {
-                    const val = data[key];
+                    const val = values[key];
                     const tdValue = document.createElement('td');
                     const tdLevel = document.createElement('td');
 
@@ -336,12 +327,10 @@ function updateSensorData() {
                                           (key === 'ch4') ? `${val} ppm` :
                                           (key === 'aqi') ? val.toFixed(2) :
                                           `${val}`;
-                    
-                                        tdValue.style.padding = '10px';
-                                        tdValue.style.border = '1px solid #444';
-                                        tdValue.style.boxSizing = 'border-box';
-                                       
 
+                    tdValue.style.padding = '10px';
+                    tdValue.style.border = '1px solid #444';
+                    tdValue.style.boxSizing = 'border-box';
 
                     let levelInfo;
                     switch (key) {
@@ -363,26 +352,25 @@ function updateSensorData() {
                     tdLevel.style.border = '1px solid #555';
                     tdLevel.style.boxSizing = 'border-box';
 
-
                     valueRow.appendChild(tdValue);
                     levelRow.appendChild(tdLevel);
                 });
 
                 tbody.appendChild(valueRow);
-tbody.appendChild(levelRow);
+                tbody.appendChild(levelRow);
 
-// Add a spacer row between hour sets
-const spacer = document.createElement('tr');
-const spacerTd = document.createElement('td');
-spacerTd.colSpan = 10; // number of columns in your table
-spacerTd.style.height = '10px'; // space height
-spacer.appendChild(spacerTd);
-tbody.appendChild(spacer);
-
+                // Add spacer
+                const spacer = document.createElement('tr');
+                const spacerTd = document.createElement('td');
+                spacerTd.colSpan = 10;
+                spacerTd.style.height = '10px';
+                spacer.appendChild(spacerTd);
+                tbody.appendChild(spacer);
             });
         })
         .catch(error => console.error('Error fetching prediction data:', error));
 }
+
 
 
 function applyLevel(elementId, levelInfo) {
