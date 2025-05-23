@@ -85,6 +85,7 @@ body {
     animation: gradientBG 10s ease infinite;
 }
 
+
 @keyframes gradientBG {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -134,17 +135,22 @@ button:hover {
 .pollutant-trend-chart-container {
     width: 100%;
     height: 300px;
-    padding: 10px;
-    padding-top: 20px;
+    padding: 20px 10px 10px 10px;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .aqi-trend-title {
-    font-family: Poppins, sans-serif;
-    font-size: 20px;
-    color: #cccccc;
-    margin-bottom: 10px;
+    margin-top: -55px;
+    margin-left: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px; /* Reduce size for smaller screens */
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    text-align: center;
 }
 
 #pollutantTrendContainer {
@@ -158,14 +164,16 @@ button:hover {
     height: 100% !important;
 }
 
+/* Updated select bar */
 .pollutant-select-bar {
     align-self: flex-start;
-    background-color: rgba(255, 255, 255, 0.1); /* Dark shade matching chart container */
-    padding: 0px 0px;
+    padding: 5px 10px;
     border-radius: 10px;
-    margin-bottom: 40px;
-    margin-top: -40px;
-    margin-left: -30px;
+    margin-bottom: 20px;
+    margin-top: -35px;
+    margin-left: 170px;
+    z-index: 2;
+    position: relative;
 }
 
 #pollutantSelect {
@@ -176,8 +184,29 @@ button:hover {
     padding: 6px 10px;
     border-radius: 4px;
     font-size: 14px;
-    
 }
+
+/* Responsive styling for mobile */
+@media screen and (max-width: 600px) {
+   
+
+    .pollutant-select-bar {
+        width: 100%;
+        align-self: center;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        margin-right: 170px;
+    }
+
+    .aqi-trend-title {
+        font-size: 18px;
+        margin-top: -100px;
+        margin-left: 150px;
+        margin-bottom: 70px;
+    }
+}
+
 
 /* AQI Trend Chart Container */
 .aqi-trend-chart-container {
@@ -217,17 +246,7 @@ button:hover {
 }
 
 /* AQI Trend Title */
-.aqi-trend-title {
-    position: absolute;
-    top: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 22px; /* Reduce size for smaller screens */
-    font-weight: bold;
-    color: white;
-    text-transform: uppercase;
-    text-align: center;
-}
+
 
 /* Responsive Design for Mobile */
 @media screen and (max-width: 768px) {
@@ -396,12 +415,13 @@ button:hover {
         align-items: center;
         width: 100%;
         margin-left: 0;
-        margin-top: -20px;
+        margin-top: 10px;
     }
 
     .learn-more-button-wrapper a {
         text-align: center;
         width: 100%;
+        margin-top: -30px;
     }
 
     .learn-more-button-wrapper button {
@@ -419,13 +439,14 @@ button:hover {
     justify-content: space-between;
     align-items: center;
     background: rgba(0, 0, 0, 0.6);
-    padding: 20px;
+    padding: 30px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     flex-wrap: wrap;
-    margin-right: -5px;
+    margin-right: -10px;
 
 }
+
 
 /* Navigation */
 nav ul {
@@ -512,6 +533,40 @@ nav ul li a:hover {
     margin-top: 5px;
     flex-shrink: 0;
 }
+
+@media screen and (max-width: 600px) {
+    .aqi-bottom-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 0px;
+        margin-top: 0px;
+        padding: 0 10px; /* Prevent edge overflow */
+        width: 94%;
+    }
+
+    .aqi-statement-container,
+    .aqi-secondary-container {
+        width: 100%;
+        margin-left: 8px; !important;
+        margin-right: 0 !important;
+        padding: 15px;
+        box-sizing: border-box; /* Ensures padding stays within width */
+        margin-bottom: 20px;
+    }
+
+    .aqi-statement-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .aqi-icon {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+}
+
+
 
 
 /* Dashboard Container */
@@ -645,8 +700,8 @@ footer {
     }
 
     .pie-chart-wrapper {
-        margin-left: 0;
-
+        margin-left: 50px; 
+        margin-top: -80px;
     }
 
     .pie-chart-wrapper canvas {
@@ -719,7 +774,7 @@ footer {
 
     /* Footer */
     footer {
-        padding: 15px;
+        padding: 20px;
         font-size: 14px;
     }
 }
@@ -837,7 +892,6 @@ footer {
 
             <!-- Main Pollutant Circle -->
             <div class="pie-chart-wrapper">
-            <!-- Replace your <canvas id="pollutantChart"> with this -->
 <div style="display: flex; justify-content: center; align-items: center; height: 300px;">
 
   <svg width="150" height="150" viewBox="0 0 100 100">
@@ -882,7 +936,7 @@ footer {
                 <option value="aqi">Overall AQI</option>
             </select>
         </div>
-        <h2 class="aqi-trend-title">Pollutant Trends</h2>
+        <h3 class="aqi-trend-title">Pollutant Trends</h3>
         <div id="pollutantTrendContainer">
             <canvas id="pollutantTrendChart"></canvas>
         </div>
@@ -1948,7 +2002,6 @@ function updateSensorData() {
             console.error('Fetch error:', error);
         });
 }
-
 
 function applyLevel(elementId, levelInfo) {
     const el = document.getElementById(elementId);
