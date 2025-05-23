@@ -556,13 +556,13 @@ nav ul li a:hover {
 
     .aqi-statement-content {
         flex-direction: column;
-        align-items: center;
-        text-align: center;
+        
     }
 
     .aqi-icon {
         margin-top: 0;
-        margin-bottom: 10px;
+        margin-bottom: 0px;
+        font-size: 60px;
     }
 }
 
