@@ -556,13 +556,15 @@ nav ul li a:hover {
 
     .aqi-statement-content {
         flex-direction: column;
-        
+    
     }
 
     .aqi-icon {
         margin-top: 0;
         margin-bottom: 0px;
+        margin-left: 115px;
         font-size: 60px;
+        align-items: center;
     }
 }
 
@@ -1244,7 +1246,7 @@ setInterval(updateCautionaryStatement, 5000); //
 
 <div class="metric-card">
     <div class="info-icon" id="co_info" onclick="showInfo('co')">i</div>
-    <h3>Carbon Monoxide (CO)</h3>
+    <h3>Carbon Monoxide</h3>
     <div class="metric-values">
         <p><span id="co_val">-- ppm</span></p>
         <div class="level-card" id="co_level">--</div>
@@ -1253,7 +1255,7 @@ setInterval(updateCautionaryStatement, 5000); //
 
 <div class="metric-card">
     <div class="info-icon" id="o3_info" onclick="showInfo('o3')">i</div>
-    <h3>Ozone (O₃)</h3>
+    <h3>Ground-Level Ozone</h3>
     <div class="metric-values">
         <p><span id="o3_val">-- ppb</span></p>
         <div class="level-card" id="o3_level">--</div>
@@ -1262,7 +1264,7 @@ setInterval(updateCautionaryStatement, 5000); //
 
 <div class="metric-card">
     <div class="info-icon" id="so2_info" onclick="showInfo('so2')">i</div>
-    <h3>Sulfur Dioxide (SO₂)</h3>
+    <h3>Sulfur Dioxide</h3>
     <div class="metric-values">
         <p><span id="so2_val">-- ppb</span></p>
         <div class="level-card" id="so2_level">--</div>
