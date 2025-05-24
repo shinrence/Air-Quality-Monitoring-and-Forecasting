@@ -1616,7 +1616,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // AQI category utility
     function getAQIDescription(aqi) {
         if (aqi <= 50) return { level: "Good", key: "good", url: "good_aqi_details.php", message: "Air quality is satisfactory." };
         if (aqi <= 100) return { level: "Moderate", key: "moderate", url: "moderate_aqi_details.php", message: "Some pollutants may affect sensitive individuals." };
@@ -1626,20 +1625,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         return { level: "Hazardous", key: "hazardous", url: "hazardous_aqi_details.php", message: "Health warning: everyone may be affected." };
     }
 
-    // Individual pollutant level functions (abbreviated versions here)
-    // Full versions should match your logic from earlier
     const getLevels = {
         pm25: v => getPM25Level(v),
         pm10: v => getPM10Level(v),
-        co: v => getCOLevel(v * 1000), // Convert CO from ppm to ppb if needed
+        co: v => getCOLevel(v * 1000),
         o3: v => getO3Level(v),
-        so2: v => getSO2Level(v),
+        so2: v => getSO2Level(v), // from h2
         temp: v => getTempLevel(v),
         hum: v => getHumLevel(v),
-        ch4: v => getCH4Level(v)
+        ch4: v => getCH4Level(v)  // Heat Index
     };
 
-    const criticalKeys = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous', 'tooHumid', 'hot', 'caution'];
+    const criticalKeys = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous', 'tooHumid', 'hot', 'caution', 'extremeCaution', 'danger'];
+
+    const displayNames = {
+        pm25: "PM 2.5",
+        pm10: "PM 10",
+        co: "CO",
+        o3: "O₃",
+        so2: "SO₂",
+        temp: "Temperature",
+        hum: "Humidity",
+        ch4: "Heat Index"
+    };
 
     async function fetchAndNotify() {
         try {
@@ -1649,22 +1657,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             const aqi = parseInt(data.aqi_total);
             const aqiInfo = getAQIDescription(aqi);
 
-            // AQI level change notification
             if (!prevLevels.aqi || prevLevels.aqi !== aqiInfo.key) {
                 prevLevels.aqi = aqiInfo.key;
                 notify(`AQI Update: ${aqiInfo.level} (${aqi})`, `${aqiInfo.message} Tap for details.`, aqiInfo.url);
             }
 
-            // Pollutants
             const pollutants = {
                 pm25: parseFloat(data.pm25),
                 pm10: parseFloat(data.pm10),
                 co: parseFloat(data.co),
                 o3: parseFloat(data.o3),
-                so2: parseFloat(data.h2), // SO2 = h2
+                so2: parseFloat(data.h2),
                 temp: parseFloat(data.temp),
                 hum: parseFloat(data.hum),
-                ch4: parseFloat(data.ch4) // heat index
+                ch4: parseFloat(data.ch4)
             };
 
             for (const [key, value] of Object.entries(pollutants)) {
@@ -1674,8 +1680,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (criticalKeys.includes(info.key) && info.key !== prevKey) {
                     prevLevels[key] = info.key;
 
-                    const label = key.toUpperCase().replace("PM", "PM ");
-                    notify(`${label} Alert: ${info.level}`, `Level changed to ${info.level} (${value}). Tap for more info.`, `${info.key}_aqi_details.php`);
+                    const label = displayNames[key] || key.toUpperCase();
+                    notify(`${label} Alert: ${info.level}`, `${label} level is now ${info.level} (${value}). Tap for details.`, `${info.key}_aqi_details.php`);
                 }
             }
 
@@ -1684,11 +1690,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // Initial + every 5 mins
     fetchAndNotify();
     setInterval(fetchAndNotify, 5 * 60 * 1000);
 });
 </script>
+
 
 
 
