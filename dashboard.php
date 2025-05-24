@@ -1588,6 +1588,10 @@ window.onload = function () {
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
+    let lastAQILevel = null;
+    const lastPollutantLevels = {};
+
+    // Register service worker
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.register('/sw.js');
@@ -1601,7 +1605,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const subscription = await registration.pushManager.getSubscription() ||
                     await registration.pushManager.subscribe({
                         userVisibleOnly: true,
-                        applicationServerKey: '<YOUR_PUBLIC_VAPID_KEY>'
+                        applicationServerKey: '<YOUR_PUBLIC_VAPID_KEY>' // Replace with real key
                     });
                 console.log("Push subscription:", JSON.stringify(subscription));
             }
@@ -1613,43 +1617,114 @@ document.addEventListener("DOMContentLoaded", async () => {
     function getAQIDescription(aqi) {
         if (aqi <= 50) return { level: "Good", message: "Air quality is satisfactory.", file: "good_aqi_details.php" };
         if (aqi <= 100) return { level: "Moderate", message: "Some pollutants may affect sensitive individuals.", file: "moderate_aqi_details.php" };
-        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", message: "Sensitive individuals may experience effects.", file: "unhealthy_for_sensitive_groups_aqi_details.php" };
+        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", message: "Sensitive individuals may experience effects.", file: "unhealthy_sensitive_aqi_details.php" };
         if (aqi <= 200) return { level: "Unhealthy", message: "Everyone may experience health effects.", file: "unhealthy_aqi_details.php" };
         if (aqi <= 300) return { level: "Very Unhealthy", message: "More serious health effects possible.", file: "very_unhealthy_aqi_details.php" };
         return { level: "Hazardous", message: "Health warning: everyone may be affected.", file: "hazardous_aqi_details.php" };
     }
 
-    async function showAQINotification() {
+    function getPollutantDescription(pollutant, value) {
+        switch (pollutant) {
+            case 'pm25':
+            case 'pm10':
+            case 'co':
+            case 'o3':
+            case 'so2':
+                if (value >= 101 && value <= 150) return { level: "Unhealthy for Sensitive Groups", message: `${pollutant.toUpperCase()} levels may affect sensitive individuals.`, file: `${pollutant}_unhealthy_sensitive.php` };
+                if (value > 150) return { level: "Unhealthy", message: `${pollutant.toUpperCase()} levels are unhealthy for everyone.`, file: `${pollutant}_unhealthy.php` };
+                if (value <= 100) return { level: "Moderate", message: `${pollutant.toUpperCase()} levels are acceptable.`, file: `${pollutant}_moderate.php` };
+                break;
+            case 'temp':
+                if (value >= 30) return { level: "Hot", message: "High temperature detected.", file: "temp_hot.php" };
+                break;
+            case 'hum':
+                if (value >= 70) return { level: "Too Humid", message: "High humidity levels detected.", file: "humidity_high.php" };
+                break;
+            case 'ch4': // Assuming CH₄ represents heat index
+                if (value >= 27 && value <= 32) return { level: "Caution", message: "Heat index indicates caution.", file: "heat_index_caution.php" };
+                break;
+            default:
+                return null;
+        }
+        return null;
+    }
+
+    async function checkAndNotify() {
         try {
             const response = await fetch("https://air-quality-php-backend.onrender.com/latest_data_api.php");
             const data = await response.json();
-            const aqi = parseInt(data.aqi_total);
-            const { level, message, file } = getAQIDescription(aqi);
 
-            if (Notification.permission === "granted") {
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(`AQI Update: ${level} (${aqi})`, {
-                        body: message,
-                        icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
-                        tag: "aqi-update",
-                        data: {
-                            url: `/${file}`
-                        },
-                        actions: [
-                            { action: 'view', title: 'View More Details' }
-                        ]
+            const aqi = parseInt(data.aqi_total);
+            const { level: currentAQILevel, message: aqiMessage, file: aqiFile } = getAQIDescription(aqi);
+
+            if (currentAQILevel !== lastAQILevel) {
+                lastAQILevel = currentAQILevel;
+
+                if (Notification.permission === "granted") {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(`AQI Update: ${currentAQILevel} (${aqi})`, {
+                            body: aqiMessage,
+                            icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
+                            tag: "aqi-update",
+                            data: {
+                                url: `/${aqiFile}`
+                            },
+                            actions: [
+                                { action: 'view', title: 'View More Details' }
+                            ]
+                        });
                     });
-                });
+                }
+            }
+
+            // Check individual pollutants and environmental factors
+            const pollutants = {
+                pm25: parseInt(data.aqi_pm25),
+                pm10: parseInt(data.aqi_pm10),
+                co: parseFloat(data.aqi_co),
+                o3: parseInt(data.aqi_o3),
+                so2: parseInt(data.aqi_so2),
+                temp: parseFloat(data.temp),
+                hum: parseFloat(data.hum),
+                ch4: parseFloat(data.ch4) // Assuming CH₄ represents heat index
+            };
+
+            for (const [key, value] of Object.entries(pollutants)) {
+                const description = getPollutantDescription(key, value);
+                const lastLevel = lastPollutantLevels[key];
+
+                if (description && description.level !== lastLevel) {
+                    lastPollutantLevels[key] = description.level;
+
+                    if (Notification.permission === "granted") {
+                        navigator.serviceWorker.ready.then(registration => {
+                            registration.showNotification(`${key.toUpperCase()} Alert: ${description.level}`, {
+                                body: description.message,
+                                icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
+                                tag: `${key}-update`,
+                                data: {
+                                    url: `/${description.file}`
+                                },
+                                actions: [
+                                    { action: 'view', title: 'View More Details' }
+                                ]
+                            });
+                        });
+                    }
+                }
             }
         } catch (error) {
-            console.error("Error fetching AQI or showing notification:", error);
+            console.error("Error fetching data or showing notification:", error);
         }
     }
 
-    showAQINotification();
-    setInterval(showAQINotification, 5 * 60 * 1000); // every 5 minutes
+    // Initial check and set interval
+    checkAndNotify();
+    setInterval(checkAndNotify, 5 * 60 * 1000); // every 5 minutes
 });
 </script>
+
+
 
 
 <script>
