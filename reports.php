@@ -8,42 +8,83 @@
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #12121f);
-      color: white;
-      margin: 0;
-      padding: 0;
-    }
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #12121f);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 20px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-    }
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            flex-wrap: wrap;
+        }
 
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 10px;
-      padding: 0;
-      margin: 0;
-    }
+        /* Navigation */
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            padding: 0;
+        }
 
-    nav ul li a {
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 16px;
-      padding: 10px;
-      transition: color 0.3s ease;
-    }
+        nav ul li {
+            display: inline-block;
+        }
 
-    nav ul li a:hover {
-      color: #ffcc00;
-    }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 16px;
+            padding: 10px;
+        }
+
+        nav ul li a:hover {
+            color: #ffcc00;
+        }
+
+        @media (max-width: 768px) {
+        
+        /* Navigation */
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline-block;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    font-size: 14px;
+    padding: 2px;
+}
+
+nav ul li a:hover {
+    color: #ffcc00;
+}
+        }
+
+    
 
     .container {
       max-width: 1000px;

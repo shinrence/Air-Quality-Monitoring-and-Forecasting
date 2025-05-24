@@ -56,6 +56,36 @@
             color: #ffcc00;
         }
 
+        @media (max-width: 768px) {
+        
+        /* Navigation */
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline-block;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    font-size: 14px;
+    padding: 2px;
+}
+
+nav ul li a:hover {
+    color: #ffcc00;
+}
+        }
+
         /* Container */
         .container {
             max-width: 1000px;
@@ -89,6 +119,24 @@
         .unhealthy { background-color: #e65100; color: white; } /* Dark Orange */
         .very-unhealthy { background-color: #b71c1c; color: white; } /* Dark Red */
         .hazardous { background-color: #4a001f; color: white; } /* Dark Maroon */
+
+        @media screen and (max-width: 600px) {
+    .container {
+        padding: 15px; /* Reduce side padding for smaller screens */
+    }
+
+    .aqi-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto; /* Enables horizontal scroll if needed */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+
+    .aqi-table table {
+        width: 100%;
+        min-width: 600px; /* Ensure the table doesn't shrink too much */
+    }
+}
 
         /* Footer */
         footer {

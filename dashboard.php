@@ -1576,15 +1576,52 @@ category = levelMap[category] || 'good';
     };
 }
 
-
-
-
-
 // Initial load and auto-refresh every 5 seconds
 window.onload = function () {
     updateDashboardFromAPI();
     setInterval(updateDashboardFromAPI, 5000);
 };
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Request notification permission
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
+    // AQI Description based on ranges
+    function getAQIDescription(aqi) {
+        if (aqi <= 50) return { level: "Good", message: "Air quality is satisfactory." };
+        if (aqi <= 100) return { level: "Moderate", message: "Acceptable, but some pollutants may affect sensitive individuals." };
+        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", message: "Sensitive individuals may experience effects." };
+        if (aqi <= 200) return { level: "Unhealthy", message: "Everyone may begin to experience health effects." };
+        if (aqi <= 300) return { level: "Very Unhealthy", message: "Health alert: more serious health effects possible." };
+        return { level: "Hazardous", message: "Health warning: everyone may be affected." };
+    }
+
+    // Fetch AQI and trigger notification
+    function fetchAQIAndNotify() {
+        fetch("https://air-quality-php-backend.onrender.com/latest_data_api.php")
+            .then(response => response.json())
+            .then(data => {
+                const aqi = parseInt(data.aqi_total);
+                const { level, message } = getAQIDescription(aqi);
+
+                if (Notification.permission === "granted") {
+                    new Notification(`AQI Update: ${level} (${aqi})`, {
+                        body: message,
+                        icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png" // Optional icon
+                    });
+                }
+            })
+            .catch(console.error);
+    }
+
+    // Check AQI every 5 minutes (adjust as needed)
+    fetchAQIAndNotify();
+    setInterval(fetchAQIAndNotify, 5 * 60 * 1000);
+});
 </script>
 
 
