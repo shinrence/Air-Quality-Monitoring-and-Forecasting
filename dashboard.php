@@ -1588,56 +1588,56 @@ window.onload = function () {
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-    // Register service worker
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.register('/sw.js');
             console.log("Service Worker registered:", registration);
 
-            // Request notification permission
             if (Notification.permission !== "granted") {
                 await Notification.requestPermission();
             }
 
-            // Subscribe to push notifications (future use)
             if ('PushManager' in window && Notification.permission === "granted") {
                 const subscription = await registration.pushManager.getSubscription() ||
                     await registration.pushManager.subscribe({
                         userVisibleOnly: true,
-                        applicationServerKey: '<YOUR_PUBLIC_VAPID_KEY>' // Replace with actual VAPID key
+                        applicationServerKey: '<YOUR_PUBLIC_VAPID_KEY>'
                     });
                 console.log("Push subscription:", JSON.stringify(subscription));
-                // Send subscription to your backend here if needed
             }
         } catch (error) {
-            console.error("Service Worker registration or push setup failed:", error);
+            console.error("Service Worker or push setup failed:", error);
         }
     }
 
-    // AQI description
     function getAQIDescription(aqi) {
-        if (aqi <= 50) return { level: "Good", message: "Air quality is satisfactory." };
-        if (aqi <= 100) return { level: "Moderate", message: "Some pollutants may affect sensitive individuals." };
-        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", message: "Sensitive individuals may experience effects." };
-        if (aqi <= 200) return { level: "Unhealthy", message: "Everyone may experience health effects." };
-        if (aqi <= 300) return { level: "Very Unhealthy", message: "More serious health effects possible." };
-        return { level: "Hazardous", message: "Health warning: everyone may be affected." };
+        if (aqi <= 50) return { level: "Good", message: "Air quality is satisfactory.", file: "good_aqi_details.php" };
+        if (aqi <= 100) return { level: "Moderate", message: "Some pollutants may affect sensitive individuals.", file: "moderate_aqi_details.php" };
+        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", message: "Sensitive individuals may experience effects.", file: "unhealthy_for_sensitive_groups_aqi_details.php" };
+        if (aqi <= 200) return { level: "Unhealthy", message: "Everyone may experience health effects.", file: "unhealthy_aqi_details.php" };
+        if (aqi <= 300) return { level: "Very Unhealthy", message: "More serious health effects possible.", file: "very_unhealthy_aqi_details.php" };
+        return { level: "Hazardous", message: "Health warning: everyone may be affected.", file: "hazardous_aqi_details.php" };
     }
 
-    // Notify user
     async function showAQINotification() {
         try {
             const response = await fetch("https://air-quality-php-backend.onrender.com/latest_data_api.php");
             const data = await response.json();
             const aqi = parseInt(data.aqi_total);
-            const { level, message } = getAQIDescription(aqi);
+            const { level, message, file } = getAQIDescription(aqi);
 
             if (Notification.permission === "granted") {
                 navigator.serviceWorker.ready.then(registration => {
                     registration.showNotification(`AQI Update: ${level} (${aqi})`, {
                         body: message,
                         icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
-                        tag: "aqi-update"
+                        tag: "aqi-update",
+                        data: {
+                            url: `/${file}`
+                        },
+                        actions: [
+                            { action: 'view', title: 'View More Details' }
+                        ]
                     });
                 });
             }
@@ -1646,12 +1646,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // Initial and interval notifications
     showAQINotification();
     setInterval(showAQINotification, 5 * 60 * 1000); // every 5 minutes
 });
-
 </script>
+
 
 <script>
 if ('serviceWorker' in navigator) {
