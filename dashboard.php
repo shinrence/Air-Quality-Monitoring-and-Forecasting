@@ -12,6 +12,9 @@
 <html lang="en">
 <head>
     
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00c853">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Air Quality Monitoring Dashboard</title>
@@ -1620,10 +1623,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Check AQI every 5 minutes (adjust as needed)
     fetchAQIAndNotify();
-    setInterval(fetchAQIAndNotify, 5 * 60 * 1000);
+    setInterval(fetchAQIAndNotify, 5 * 16 * 1000);
 });
 </script>
 
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg => console.log('Service Worker registered', reg))
+    .catch(err => console.error('Service Worker registration failed', err));
+}
+
+self.addEventListener('install', event => {
+  console.log('Service worker installed');
+});
+
+self.addEventListener('activate', event => {
+  console.log('Service worker activated');
+});
+
+self.addEventListener('fetch', event => {
+  // Optionally intercept network requests
+});
+
+</script>
 
 <script>
 function updateAQICircle(aqi) {
