@@ -1588,10 +1588,8 @@ window.onload = function () {
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-    let lastAQILevel = null;
-    const lastPollutantLevels = {};
+    const prevLevels = {};
 
-    // Register service worker
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.register('/sw.js');
@@ -1600,129 +1598,98 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (Notification.permission !== "granted") {
                 await Notification.requestPermission();
             }
-
-            if ('PushManager' in window && Notification.permission === "granted") {
-                const subscription = await registration.pushManager.getSubscription() ||
-                    await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: '<YOUR_PUBLIC_VAPID_KEY>' // Replace with real key
-                    });
-                console.log("Push subscription:", JSON.stringify(subscription));
-            }
         } catch (error) {
-            console.error("Service Worker or push setup failed:", error);
+            console.error("Service Worker registration failed:", error);
         }
     }
 
+    function notify(title, body, url) {
+        if (Notification.permission === "granted") {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(title, {
+                    body,
+                    icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
+                    tag: title,
+                    data: { url }
+                });
+            });
+        }
+    }
+
+    // AQI category utility
     function getAQIDescription(aqi) {
-        if (aqi <= 50) return { level: "Good", message: "Air quality is satisfactory.", file: "good_aqi_details.php" };
-        if (aqi <= 100) return { level: "Moderate", message: "Some pollutants may affect sensitive individuals.", file: "moderate_aqi_details.php" };
-        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", message: "Sensitive individuals may experience effects.", file: "unhealthy_sensitive_aqi_details.php" };
-        if (aqi <= 200) return { level: "Unhealthy", message: "Everyone may experience health effects.", file: "unhealthy_aqi_details.php" };
-        if (aqi <= 300) return { level: "Very Unhealthy", message: "More serious health effects possible.", file: "very_unhealthy_aqi_details.php" };
-        return { level: "Hazardous", message: "Health warning: everyone may be affected.", file: "hazardous_aqi_details.php" };
+        if (aqi <= 50) return { level: "Good", key: "good", url: "good_aqi_details.php", message: "Air quality is satisfactory." };
+        if (aqi <= 100) return { level: "Moderate", key: "moderate", url: "moderate_aqi_details.php", message: "Some pollutants may affect sensitive individuals." };
+        if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", key: "usg", url: "usg_aqi_details.php", message: "Sensitive individuals may experience effects." };
+        if (aqi <= 200) return { level: "Unhealthy", key: "unhealthy", url: "unhealthy_aqi_details.php", message: "Everyone may experience health effects." };
+        if (aqi <= 300) return { level: "Very Unhealthy", key: "veryUnhealthy", url: "veryunhealthy_aqi_details.php", message: "More serious health effects possible." };
+        return { level: "Hazardous", key: "hazardous", url: "hazardous_aqi_details.php", message: "Health warning: everyone may be affected." };
     }
 
-    function getPollutantDescription(pollutant, value) {
-        switch (pollutant) {
-            case 'pm25':
-            case 'pm10':
-            case 'co':
-            case 'o3':
-            case 'so2':
-                if (value >= 101 && value <= 150) return { level: "Unhealthy for Sensitive Groups", message: `${pollutant.toUpperCase()} levels may affect sensitive individuals.`, file: `${pollutant}_unhealthy_sensitive.php` };
-                if (value > 150) return { level: "Unhealthy", message: `${pollutant.toUpperCase()} levels are unhealthy for everyone.`, file: `${pollutant}_unhealthy.php` };
-                if (value <= 100) return { level: "Moderate", message: `${pollutant.toUpperCase()} levels are acceptable.`, file: `${pollutant}_moderate.php` };
-                break;
-            case 'temp':
-                if (value >= 30) return { level: "Hot", message: "High temperature detected.", file: "temp_hot.php" };
-                break;
-            case 'hum':
-                if (value >= 70) return { level: "Too Humid", message: "High humidity levels detected.", file: "humidity_high.php" };
-                break;
-            case 'ch4': // Assuming CH₄ represents heat index
-                if (value >= 27 && value <= 32) return { level: "Caution", message: "Heat index indicates caution.", file: "heat_index_caution.php" };
-                break;
-            default:
-                return null;
-        }
-        return null;
-    }
+    // Individual pollutant level functions (abbreviated versions here)
+    // Full versions should match your logic from earlier
+    const getLevels = {
+        pm25: v => getPM25Level(v),
+        pm10: v => getPM10Level(v),
+        co: v => getCOLevel(v * 1000), // Convert CO from ppm to ppb if needed
+        o3: v => getO3Level(v),
+        so2: v => getSO2Level(v),
+        temp: v => getTempLevel(v),
+        hum: v => getHumLevel(v),
+        ch4: v => getCH4Level(v)
+    };
 
-    async function checkAndNotify() {
+    const criticalKeys = ['usg', 'unhealthy', 'veryUnhealthy', 'hazardous', 'tooHumid', 'hot', 'caution'];
+
+    async function fetchAndNotify() {
         try {
             const response = await fetch("https://air-quality-php-backend.onrender.com/latest_data_api.php");
             const data = await response.json();
 
             const aqi = parseInt(data.aqi_total);
-            const { level: currentAQILevel, message: aqiMessage, file: aqiFile } = getAQIDescription(aqi);
+            const aqiInfo = getAQIDescription(aqi);
 
-            if (currentAQILevel !== lastAQILevel) {
-                lastAQILevel = currentAQILevel;
-
-                if (Notification.permission === "granted") {
-                    navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification(`AQI Update: ${currentAQILevel} (${aqi})`, {
-                            body: aqiMessage,
-                            icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
-                            tag: "aqi-update",
-                            data: {
-                                url: `/${aqiFile}`
-                            },
-                            actions: [
-                                { action: 'view', title: 'View More Details' }
-                            ]
-                        });
-                    });
-                }
+            // AQI level change notification
+            if (!prevLevels.aqi || prevLevels.aqi !== aqiInfo.key) {
+                prevLevels.aqi = aqiInfo.key;
+                notify(`AQI Update: ${aqiInfo.level} (${aqi})`, `${aqiInfo.message} Tap for details.`, aqiInfo.url);
             }
 
-            // Check individual pollutants and environmental factors
+            // Pollutants
             const pollutants = {
-                pm25: parseInt(data.aqi_pm25),
-                pm10: parseInt(data.aqi_pm10),
-                co: parseFloat(data.aqi_co),
-                o3: parseInt(data.aqi_o3),
-                so2: parseInt(data.aqi_so2),
+                pm25: parseFloat(data.pm25),
+                pm10: parseFloat(data.pm10),
+                co: parseFloat(data.co),
+                o3: parseFloat(data.o3),
+                so2: parseFloat(data.h2), // SO2 = h2
                 temp: parseFloat(data.temp),
                 hum: parseFloat(data.hum),
-                ch4: parseFloat(data.ch4) // Assuming CH₄ represents heat index
+                ch4: parseFloat(data.ch4) // heat index
             };
 
             for (const [key, value] of Object.entries(pollutants)) {
-                const description = getPollutantDescription(key, value);
-                const lastLevel = lastPollutantLevels[key];
+                const info = getLevels[key](value);
+                const prevKey = prevLevels[key];
 
-                if (description && description.level !== lastLevel) {
-                    lastPollutantLevels[key] = description.level;
+                if (criticalKeys.includes(info.key) && info.key !== prevKey) {
+                    prevLevels[key] = info.key;
 
-                    if (Notification.permission === "granted") {
-                        navigator.serviceWorker.ready.then(registration => {
-                            registration.showNotification(`${key.toUpperCase()} Alert: ${description.level}`, {
-                                body: description.message,
-                                icon: "https://cdn-icons-png.flaticon.com/512/219/219816.png",
-                                tag: `${key}-update`,
-                                data: {
-                                    url: `/${description.file}`
-                                },
-                                actions: [
-                                    { action: 'view', title: 'View More Details' }
-                                ]
-                            });
-                        });
-                    }
+                    const label = key.toUpperCase().replace("PM", "PM ");
+                    notify(`${label} Alert: ${info.level}`, `Level changed to ${info.level} (${value}). Tap for more info.`, `${info.key}_aqi_details.php`);
                 }
             }
-        } catch (error) {
-            console.error("Error fetching data or showing notification:", error);
+
+        } catch (err) {
+            console.error("Fetch or notify error:", err);
         }
     }
 
-    // Initial check and set interval
-    checkAndNotify();
-    setInterval(checkAndNotify, 5 * 60 * 1000); // every 5 minutes
+    // Initial + every 5 mins
+    fetchAndNotify();
+    setInterval(fetchAndNotify, 5 * 60 * 1000);
 });
 </script>
+
 
 
 
