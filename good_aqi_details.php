@@ -5,6 +5,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pollutant History</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -133,6 +134,60 @@ table ul {
   margin: 0;
 }
 
+@media (max-width: 768px) {
+
+    header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    flex-wrap: wrap;
+    margin-right: -10px;
+
+}
+
+
+/* Navigation */
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline-block;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    font-size: 14px;
+    padding: 2px;
+}
+
+nav ul li a:hover {
+    color: #ffcc00;
+}
+
+
+    .forecast-button-wrapper a {
+        text-align: center;
+        width: 100%;
+    }
+
+    .forecast-button-wrapper button {
+        width: 90%;
+        max-width: 300px;
+    }
+}
   </style>
 </head>
 <body>
@@ -142,8 +197,8 @@ table ul {
       <ul>
         <li><a href="index.php">Home</a></li>
         <li><a href="dashboard.php">Dashboard</a></li>
-        <li><a href="reports.php">Reports</a></li>
         <li><a href="history.php">History</a></li>
+        <li><a href="reports.php">About</a></li>
       </ul>
     </nav>
   </header>
