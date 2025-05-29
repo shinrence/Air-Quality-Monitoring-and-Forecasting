@@ -1062,10 +1062,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return dataArray.length ? sum / dataArray.length : 0;
     }
 
-    function updateChartColor(pollutantKey) {
-        const avg = calculateAverage(pollutantData[pollutantKey].data);
-        return getAQIColor(avg);
-    }
+    function updateChartColor(aqiTotal) {
+    return getAQIColor(aqiTotal);
+}
+
 
     function createChart(pollutantKey) {
         const avgColor = updateChartColor(pollutantKey);
@@ -2097,7 +2097,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSlide();
 
     // Switch slide every 10 seconds (matching your comment)
-    setInterval(updateSlide, 10000);
+    setInterval(updateSlide, 5000);
 });
 </script>
 
