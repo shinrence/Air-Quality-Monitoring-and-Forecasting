@@ -1035,12 +1035,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     document.getElementById("pollutantSelect").value = defaultPollutant;
 
-                    let chart = createChart(defaultPollutant);
+                    const aqiTotal = parseFloat(latest.aqi_total);
+                    let chart = createChart(defaultPollutant, aqiTotal);
+
 
                     document.getElementById("pollutantSelect").addEventListener("change", function () {
                         const selected = this.value;
                         chart.destroy();
-                        chart = createChart(selected);
+                        chart = createChart(selected, aqiTotal);
+
                     });
                 });
         })
@@ -1067,8 +1070,9 @@ document.addEventListener("DOMContentLoaded", function () {
 }
 
 
-    function createChart(pollutantKey) {
-        const avgColor = updateChartColor(pollutantKey);
+    function createChart(pollutantKey, aqiTotal) {
+        const avgColor = updateChartColor(aqiTotal);
+
 
         return new Chart(ctx, {
             type: "line",
